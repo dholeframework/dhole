@@ -1,20 +1,25 @@
 # Java
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 hs_err_pid*
 replay_pid*
 
+# Gradle
+.gradle/
+.kotlin/
+build/
+
 # JRF build/dev
-/build/
 /.jrf/
-/out/
 /dist/
 
 # IDEs
 .idea/
 *.iml
+out/
 .vscode/
 .classpath
 .project

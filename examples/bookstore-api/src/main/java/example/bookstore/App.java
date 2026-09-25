@@ -1,7 +1,7 @@
 package example.bookstore;
 
-// Placeholder da aplicação de referência.
-// A implementação começa após o fecho da Specification v0.1.
+// Reference application placeholder.
+// Implementation starts after Specification v0.1 is closed.
 public final class App {
     private App() {}
 }

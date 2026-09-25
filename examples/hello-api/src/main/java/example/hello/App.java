@@ -1,7 +1,7 @@
 package example.hello;
 
-// Placeholder da especificação.
-// Será ativado quando jrf-core existir.
+// Specification placeholder.
+// Activated once jrf-core provides the runtime entry point.
 public final class App {
     private App() {}
 }
