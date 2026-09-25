@@ -136,7 +136,7 @@ These decisions must not be guessed silently.
 ## Last Verified Commit
 
 ```text
-build: establish repository foundation
+d14861f build: establish repository foundation
 ```
 
 ---
