@@ -13,7 +13,7 @@ v0.1
 ## Current Milestone
 
 ```text
-M4 — Metadata Compiler
+M5 — HTTP + Routing
 ```
 
 ## Current Slice
