@@ -32,6 +32,17 @@ Project names equal directory names, for example `:dhole-core`, `:dhole-cli`, `:
 
 On Windows use `gradlew.bat`.
 
+## Dhole distribution
+
+The installable `dhole` command (CLI.md §17) is assembled by the repository build:
+
+```bash
+./gradlew :dhole-cli:dholeDistribution      # tools/dhole-cli/build/dhole/{bin,lib}
+./gradlew :dhole-cli:dholeDistributionZip   # tools/dhole-cli/build/distributions/dhole-<version>.zip
+```
+
+`lib/dhole-distribution.idx` catalogs the bundled artifacts that applications may select (BUILD_SYSTEM.md §21). The `:dhole-cli` tests drive this distribution through `bin/dhole` / `bin/dhole.cmd` as black boxes. User-facing steps: `docs/GETTING_STARTED.md`.
+
 ## Java baseline
 
 - Java 21, configured through the Gradle Java toolchain in `org.dhole.java-conventions`.
