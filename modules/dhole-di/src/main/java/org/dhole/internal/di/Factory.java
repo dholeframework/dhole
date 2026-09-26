@@ -7,7 +7,7 @@ package org.dhole.internal.di;
  * @param <T> the provided type
  */
 @FunctionalInterface
-interface Factory<T> {
+public interface Factory<T> {
 
     /**
      * @return the instance, never {@code null}

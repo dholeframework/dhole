@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Validated, acyclic dependency graph for a set of root types. Immutable and inspectable.
  */
-final class DependencyGraph {
+public final class DependencyGraph {
 
     private final List<DependencyNode> roots;
     private final Map<Class<?>, DependencyNode> nodes;
@@ -50,7 +50,7 @@ final class DependencyGraph {
      * └── Mail
      * </pre>
      */
-    String render() {
+    public String render() {
         List<String> lines = new ArrayList<>();
         for (DependencyNode root : roots) {
             lines.add(root.label());

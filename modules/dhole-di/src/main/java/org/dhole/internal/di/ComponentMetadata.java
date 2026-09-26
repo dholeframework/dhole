@@ -23,8 +23,10 @@ import org.dhole.di.DependencyException;
  * <p>Reading is strict: an unknown version fails with a compatibility error and any malformed line
  * fails with its line number. Classes named by the index are loaded only when a resolution needs
  * them; the index is never used to scan or instantiate types eagerly.
+ *
+ * <p>Public only for the internal web runtime; not application API.
  */
-final class ComponentMetadata {
+public final class ComponentMetadata {
 
     static final String LOCATION = "META-INF/dhole/components.idx";
     static final int VERSION = 1;
@@ -45,7 +47,7 @@ final class ComponentMetadata {
         this.loader = loader;
     }
 
-    static ComponentMetadata empty() {
+    public static ComponentMetadata empty() {
         return EMPTY;
     }
 
@@ -55,7 +57,7 @@ final class ComponentMetadata {
      * @throws DependencyException if there are several indexes, or the index is incompatible or
      *         malformed
      */
-    static ComponentMetadata load(ClassLoader loader) {
+    public static ComponentMetadata load(ClassLoader loader) {
         Objects.requireNonNull(loader, "loader");
         List<URL> resources;
         try {
@@ -90,7 +92,7 @@ final class ComponentMetadata {
     /**
      * Returns the indexed classes that have {@code supertype} among their supertypes, sorted by name.
      */
-    List<String> providersOf(String supertype) {
+    public List<String> providersOf(String supertype) {
         return types.values().stream()
                 .filter(type -> type.supertypes().contains(supertype))
                 .map(TypeMetadata::type)
@@ -102,7 +104,7 @@ final class ComponentMetadata {
      *
      * @throws DependencyException if the class does not exist
      */
-    Class<?> loadClass(String name) {
+    public Class<?> loadClass(String name) {
         Class<?> primitive = PRIMITIVES.get(name);
         if (primitive != null) {
             return primitive;

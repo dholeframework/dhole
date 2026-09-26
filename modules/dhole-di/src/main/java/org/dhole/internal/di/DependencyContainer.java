@@ -16,23 +16,28 @@ import org.dhole.di.DependencyException;
  * Creates components from validated {@link DependencyGraph}s.
  *
  * <p>Every resolution first builds (or reuses) the graph of the requested type, so missing,
- * ambiguous, unusable and circular dependencies fail before any instance is created. Singletons
- * are created once per container; prototypes on every resolution. Separate containers never share
+ * ambiguous, unusable and circular dependencies, and scope errors, fail before any instance is
+ * created. Singletons are created once per container; prototypes on every resolution; request
+ * components once per {@link RequestScope}, and only inside one. Separate containers never share
  * instances.
  *
  * <p>Thread safety: a resolution that has to create a singleton, or may run a factory, holds the
  * container lock, so each singleton is created exactly once. Resolutions that only create
  * prototypes over existing singletons run without the lock. Singletons created by a resolution
- * become visible to other resolutions only when that resolution succeeds.
+ * become visible to other resolutions only when that resolution succeeds. Resolutions inside a
+ * request scope also hold that scope's lock.
  *
  * <p>Resources: the container owns the {@link AutoCloseable} singletons it creates and instances
  * whose ownership was transferred with {@code toOwnedInstance}; it never closes external instances.
- * Prototypes are owned by whoever receives them. {@link #close()} closes owned resources in reverse
- * creation order, so dependents close before their dependencies. A resolution or startup that
- * fails closes, in reverse creation order, every owned resource it created (prototypes included)
- * and rethrows the original failure with cleanup failures attached as suppressed exceptions.
+ * A request scope owns the request components created in it. Prototypes are owned by whoever
+ * receives them. {@link #close()} closes owned resources in reverse creation order, so dependents
+ * close before their dependencies. A resolution or startup that fails closes, in reverse creation
+ * order, every owned resource it created (prototypes included) and rethrows the original failure
+ * with cleanup failures attached as suppressed exceptions.
+ *
+ * <p>Public only for the internal web runtime; not application API.
  */
-final class DependencyContainer implements AutoCloseable {
+public final class DependencyContainer implements AutoCloseable {
 
     private final ComponentRegistry registry;
     private final ReentrantLock lock = new ReentrantLock();
@@ -60,34 +65,29 @@ final class DependencyContainer implements AutoCloseable {
     }
 
     /**
-     * Returns an instance of {@code type}, creating it and its dependencies as needed.
+     * Returns an instance of {@code type}, creating it and its dependencies as needed. Request
+     * components cannot be resolved here; use a {@link RequestScope}.
      *
      * @throws DependencyException if {@code type} cannot be provided
      */
-    <T> T resolve(Class<T> type) {
-        Objects.requireNonNull(type, "type");
+    public <T> T resolve(Class<T> type) {
+        return resolve(type, null);
+    }
+
+    /**
+     * Opens a request scope; the caller closes it when the request ends.
+     */
+    public RequestScope openRequestScope() {
         ensureOpen();
-        DependencyNode node = graph(type).roots().get(0);
-        Object cached = singletons.get(node.definition());
-        if (cached != null) {
-            return type.cast(cached);
-        }
-        if (!needsLock(node)) {
-            return type.cast(new Resolution().run(node));
-        }
-        lock.lock();
-        try {
-            ensureOpen();
-            return type.cast(new Resolution().run(node));
-        } finally {
-            lock.unlock();
-        }
+        return new RequestScope(this);
     }
 
     /**
      * Returns the validated graph of {@code root}.
+     *
+     * @throws DependencyException if {@code root} cannot be provided
      */
-    DependencyGraph graph(Class<?> root) {
+    public DependencyGraph graph(Class<?> root) {
         Objects.requireNonNull(root, "root");
         return graphs.computeIfAbsent(root, type -> new DependencyGraphBuilder(registry).build(List.of(type)));
     }
@@ -114,32 +114,63 @@ final class DependencyContainer implements AutoCloseable {
                 return;
             }
             closed = true;
-            List<OwnedResource> failed = new ArrayList<>();
-            List<Exception> failures = new ArrayList<>();
-            for (int index = owned.size() - 1; index >= 0; index--) {
-                OwnedResource resource = owned.get(index);
-                try {
-                    resource.instance().close();
-                } catch (Exception e) {
-                    failed.add(resource);
-                    failures.add(e);
-                }
-            }
+            List<OwnedResource> resources = List.copyOf(owned);
             owned.clear();
             singletons.clear();
-            if (!failures.isEmpty()) {
-                DependencyException failure = new DependencyException("Dependency Error\n\nFailed to close "
-                        + failed.size() + " component(s):\n"
-                        + String.join("\n", failed.stream().map(r -> "- " + DependencyMessages.name(r.type())).toList()));
-                failures.forEach(failure::addSuppressed);
-                throw failure;
-            }
+            closeAll(resources);
         } finally {
             lock.unlock();
         }
     }
 
-    private void ensureOpen() {
+    <T> T resolve(Class<T> type, RequestScope scope) {
+        Objects.requireNonNull(type, "type");
+        ensureOpen();
+        DependencyNode node = graph(type).roots().get(0);
+        Object cached = singletons.get(node.definition());
+        if (cached != null) {
+            return type.cast(cached);
+        }
+        if (!needsLock(node)) {
+            return type.cast(new Resolution(scope).run(node));
+        }
+        lock.lock();
+        try {
+            ensureOpen();
+            return type.cast(new Resolution(scope).run(node));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Closes resources in reverse order, attempting every one.
+     *
+     * @throws DependencyException listing the resources that failed to close, each failure attached
+     *         as a suppressed exception
+     */
+    static void closeAll(List<OwnedResource> resources) {
+        List<OwnedResource> failed = new ArrayList<>();
+        List<Exception> failures = new ArrayList<>();
+        for (int index = resources.size() - 1; index >= 0; index--) {
+            OwnedResource resource = resources.get(index);
+            try {
+                resource.instance().close();
+            } catch (Exception e) {
+                failed.add(resource);
+                failures.add(e);
+            }
+        }
+        if (!failures.isEmpty()) {
+            DependencyException failure = new DependencyException("Dependency Error\n\nFailed to close "
+                    + failed.size() + " component(s):\n"
+                    + String.join("\n", failed.stream().map(r -> "- " + DependencyMessages.name(r.type())).toList()));
+            failures.forEach(failure::addSuppressed);
+            throw failure;
+        }
+    }
+
+    void ensureOpen() {
         if (closed) {
             throw new IllegalStateException("The dependency container is closed.");
         }
@@ -148,7 +179,7 @@ final class DependencyContainer implements AutoCloseable {
     private void startSingletons() {
         lock.lock();
         try {
-            Resolution resolution = new Resolution();
+            Resolution resolution = new Resolution(null);
             resolution.run(() -> {
                 for (DependencyNode node : registered.dependencyOrder()) {
                     if (node.definition().scope() == ComponentScope.SINGLETON) {
@@ -181,18 +212,24 @@ final class DependencyContainer implements AutoCloseable {
      */
     private final class Resolution implements FactoryContext {
 
+        private final RequestScope scope;
         private final Map<ComponentDefinition, Object> pendingSingletons = new LinkedHashMap<>();
+        private final Map<ComponentDefinition, Object> pendingRequest = new LinkedHashMap<>();
         private final List<Class<?>> path = new ArrayList<>();
         private final List<ComponentDefinition> inProgress = new ArrayList<>();
         private final List<OwnedResource> created = new ArrayList<>();
+
+        Resolution(RequestScope scope) {
+            this.scope = scope;
+        }
 
         Object run(DependencyNode root) {
             return run(() -> create(root));
         }
 
         /**
-         * Runs {@code action}; publishes the created singletons and their owned resources on
-         * success, closes every owned resource it created on failure.
+         * Runs {@code action}; publishes what it created on success (singletons to the container,
+         * request components to the scope), closes every owned resource it created on failure.
          */
         Object run(Supplier<Object> action) {
             Object result;
@@ -203,8 +240,12 @@ final class DependencyContainer implements AutoCloseable {
                 throw failure;
             }
             singletons.putAll(pendingSingletons);
+            if (scope != null) {
+                scope.publish(pendingRequest,
+                        created.stream().filter(resource -> resource.scope() == ComponentScope.REQUEST).toList());
+            }
             for (OwnedResource resource : created) {
-                if (resource.singleton()) {
+                if (resource.scope() == ComponentScope.SINGLETON) {
                     owned.add(resource);
                 }
             }
@@ -229,14 +270,9 @@ final class DependencyContainer implements AutoCloseable {
 
         Object create(DependencyNode node) {
             ComponentDefinition definition = node.definition();
-            if (definition.scope() == ComponentScope.SINGLETON) {
-                Object existing = singletons.get(definition);
-                if (existing == null) {
-                    existing = pendingSingletons.get(definition);
-                }
-                if (existing != null) {
-                    return existing;
-                }
+            Object existing = existing(definition);
+            if (existing != null) {
+                return existing;
             }
             int cycleStart = inProgress.indexOf(definition);
             if (cycleStart >= 0) {
@@ -252,18 +288,38 @@ final class DependencyContainer implements AutoCloseable {
                     dependencies.add(create(dependency));
                 }
                 Object instance = instantiate(definition, dependencies);
-                boolean singleton = definition.scope() == ComponentScope.SINGLETON;
-                if (singleton) {
+                if (definition.scope() == ComponentScope.SINGLETON) {
                     pendingSingletons.put(definition, instance);
+                } else if (definition.scope() == ComponentScope.REQUEST) {
+                    pendingRequest.put(definition, instance);
                 }
                 if (definition.owned() && instance instanceof AutoCloseable closeable) {
-                    created.add(new OwnedResource(definition.type(), closeable, singleton));
+                    created.add(new OwnedResource(definition.type(), closeable, definition.scope()));
                 }
                 return instance;
             } finally {
                 inProgress.remove(inProgress.size() - 1);
                 path.remove(path.size() - 1);
             }
+        }
+
+        /**
+         * Returns the already created instance for a singleton or request component, if any.
+         */
+        private Object existing(ComponentDefinition definition) {
+            if (definition.scope() == ComponentScope.SINGLETON) {
+                Object existing = singletons.get(definition);
+                return existing != null ? existing : pendingSingletons.get(definition);
+            }
+            if (definition.scope() == ComponentScope.REQUEST) {
+                if (scope == null) {
+                    throw new DependencyException("Scope Error\n\n" + DependencyMessages.name(definition.type())
+                            + " is request-scoped and can only be resolved inside a request.");
+                }
+                Object existing = scope.instance(definition);
+                return existing != null ? existing : pendingRequest.get(definition);
+            }
+            return null;
         }
 
         private Object instantiate(ComponentDefinition definition, List<Object> dependencies) {
@@ -287,6 +343,6 @@ final class DependencyContainer implements AutoCloseable {
         }
     }
 
-    private record OwnedResource(Class<?> type, AutoCloseable instance, boolean singleton) {
+    record OwnedResource(Class<?> type, AutoCloseable instance, ComponentScope scope) {
     }
 }

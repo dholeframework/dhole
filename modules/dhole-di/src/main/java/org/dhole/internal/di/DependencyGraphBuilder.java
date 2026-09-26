@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.dhole.di.CircularDependencyException;
+import org.dhole.di.DependencyException;
 
 /**
  * Builds and validates a {@link DependencyGraph} from a {@link ComponentRegistry} without creating
@@ -52,9 +53,34 @@ final class DependencyGraphBuilder {
             dependencies.add(visit(dependency, path, components));
         }
         components.remove(components.size() - 1);
-        path.remove(path.size() - 1);
         DependencyNode node = new DependencyNode(requested, definition, dependencies);
+        if (definition.scope() == ComponentScope.SINGLETON) {
+            rejectCaptiveRequestDependencies(node, dependencies, path);
+        }
+        path.remove(path.size() - 1);
         nodes.put(requested, node);
         return node;
+    }
+
+    /**
+     * Rejects a singleton that depends on a request component, directly or through prototypes: the
+     * singleton would keep one request's instance for every request.
+     */
+    private static void rejectCaptiveRequestDependencies(DependencyNode singleton, List<DependencyNode> dependencies,
+            List<Class<?>> path) {
+        for (DependencyNode dependency : dependencies) {
+            List<Class<?>> dependencyPath = new ArrayList<>(path);
+            dependencyPath.add(dependency.requestedType());
+            ComponentScope scope = dependency.definition().scope();
+            if (scope == ComponentScope.REQUEST) {
+                throw new DependencyException("Scope Error\n\nSingleton "
+                        + DependencyMessages.name(singleton.definition().type()) + " depends on request-scoped "
+                        + DependencyMessages.name(dependency.definition().type()) + ".\n\nDependency path:\n"
+                        + DependencyMessages.path(dependencyPath));
+            }
+            if (scope == ComponentScope.PROTOTYPE) {
+                rejectCaptiveRequestDependencies(singleton, dependency.dependencies(), dependencyPath);
+            }
+        }
     }
 }
