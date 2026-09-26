@@ -19,13 +19,13 @@ M0 — Repository Foundation
 ## Current Slice
 
 ```text
-M0 foundation implemented and verified locally; project renamed to Dhole; CI run pending
+M0 complete — no slice in progress
 ```
 
 ## Status
 
 ```text
-M0 LOCALLY VERIFIED — waiting for first CI run on GitHub
+COMPLETE
 ```
 
 ---
@@ -47,6 +47,8 @@ M0 LOCALLY VERIFIED — waiting for first CI run on GitHub
 [x] Verify module dependency boundaries (dhole-core isolated; explicit project dependencies)
 [x] Code conventions documented: docs/DEVELOPMENT.md
 [x] .gitignore / .gitattributes / .editorconfig updated for Gradle and wrapper scripts
+[x] Remote repository configured and pushed: https://github.com/dholeframework/dhole
+[x] GitHub Actions CI ("build" workflow) passed on main
 ```
 
 ### Project identity migration
@@ -82,7 +84,7 @@ None.
 ## Remaining M0 Work
 
 ```text
-[ ] Push to the GitHub remote and confirm the "build" workflow passes (acceptance: "CI runs")
+None.
 ```
 
 ---
@@ -90,6 +92,8 @@ None.
 ## Not Started
 
 ### M1 — Core Runtime
+
+Status: NOT STARTED
 
 ```text
 [ ] Dhole
@@ -103,13 +107,19 @@ None.
 [ ] shutdown handling
 ```
 
-Do not start M1 until M0 acceptance criteria are satisfied.
+M0 acceptance criteria are satisfied; M1 may start with Slice 1.
 
 ---
 
 ## Tests
 
 ```text
+M0 verification summary:
+  Local Gradle build                                    PASSED
+  Smoke test (org.dhole.BuildInfrastructureSmokeTest)   PASSED
+  dhole-core isolation verification                     PASSED
+  GitHub Actions CI ("build" workflow, main)            PASSED on 24fe83e chore: rename project to Dhole
+
 After rename to Dhole (JDK 21.0.12, Windows 11):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all --rerun-tasks
                                                         BUILD SUCCESSFUL, 58 tasks executed, no deprecation warnings
@@ -117,7 +127,6 @@ After rename to Dhole (JDK 21.0.12, Windows 11):
   :dhole-core:verifyCoreIsolation                       PASSED
 Negative check: temporary dhole-core -> dhole-http dependency  verifyCoreIsolation FAILED as expected
 Negative check (M0): temporary failing JUnit test      test task FAILED as expected
-CI workflow                                             NOT EXECUTED — no Git remote configured
 ```
 
 ---
@@ -148,7 +157,7 @@ These decisions must not be guessed silently.
 ## Last Verified Commit
 
 ```text
-d14861f build: establish repository foundation
+24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
 ```
 
 ---
@@ -172,8 +181,8 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Add the GitHub remote, push, and confirm the "build" workflow passes. This closes M0.
-2. Then start M1 — Core Runtime, Slice 1: org.dhole.application.ApplicationState in modules/dhole-core.
+M1 — Core Runtime
+Slice 1 — ApplicationState (org.dhole.application.ApplicationState in modules/dhole-core)
 ```
 
 Read before M1:
