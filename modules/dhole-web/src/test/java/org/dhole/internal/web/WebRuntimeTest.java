@@ -87,11 +87,9 @@ class WebRuntimeTest {
     void unknownPathIs404AndUnregisteredMethodIs405() throws Exception {
         start(controller("HelloController"));
 
-        assertEquals(404, send("GET", "/missing").statusCode());
-        assertEquals("Not Found", send("GET", "/missing").body());
+        assertEquals(ErrorBodies.error("NOT_FOUND", "Route not found."), ErrorBodies.envelope(send("GET", "/missing"), 404));
         HttpResponse<String> notAllowed = send("POST", "/hello");
-        assertEquals(405, notAllowed.statusCode());
-        assertEquals("Method Not Allowed", notAllowed.body());
+        assertEquals(ErrorBodies.error("METHOD_NOT_ALLOWED", "Method not allowed."), ErrorBodies.envelope(notAllowed, 405));
     }
 
     @Test
@@ -150,8 +148,7 @@ class WebRuntimeTest {
         assertEquals("[\"json\",\"is\",\"M6\"]", list.body());
         assertEquals(Optional.of("application/json"), list.headers().firstValue("Content-Type"));
         HttpResponse<String> failure = send("GET", "/failure");
-        assertEquals(500, failure.statusCode());
-        assertEquals("Internal Server Error", failure.body());
+        assertEquals(ErrorBodies.error("INTERNAL_ERROR", "An unexpected error occurred."), ErrorBodies.envelope(failure, 500));
     }
 
     // Middleware

@@ -3,6 +3,8 @@ package org.dhole.web;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.dhole.internal.web.InvalidParameterException;
+
 /**
  * Explicitly binds a header value: {@code Response locale(Header<String> acceptLanguage)}. The
  * header name is the handler parameter name in kebab-case: {@code acceptLanguage} reads
@@ -34,7 +36,7 @@ public final class Header<T> {
      */
     public T value() {
         if (value == null) {
-            throw new BindingException("Missing header parameter '" + name + "'");
+            throw InvalidParameterException.missing(name, "header");
         }
         return value;
     }

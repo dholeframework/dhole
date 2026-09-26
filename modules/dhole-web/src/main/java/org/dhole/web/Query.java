@@ -3,6 +3,8 @@ package org.dhole.web;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.dhole.internal.web.InvalidParameterException;
+
 /**
  * Explicitly binds a query value: {@code List<User> search(Query<String> term)}. The query
  * parameter has the name of the handler parameter.
@@ -33,7 +35,7 @@ public final class Query<T> {
      */
     public T value() {
         if (value == null) {
-            throw new BindingException("Missing query parameter '" + name + "'");
+            throw InvalidParameterException.missing(name, "query");
         }
         return value;
     }

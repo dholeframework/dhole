@@ -13,8 +13,10 @@ public enum HttpStatus {
     NOT_FOUND(404, "Not Found"),
     METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
     NOT_ACCEPTABLE(406, "Not Acceptable"),
+    CONFLICT(409, "Conflict"),
     CONTENT_TOO_LARGE(413, "Content Too Large"),
     UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
+    UNPROCESSABLE_CONTENT(422, "Unprocessable Content"),
     INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
     NOT_IMPLEMENTED(501, "Not Implemented");
 

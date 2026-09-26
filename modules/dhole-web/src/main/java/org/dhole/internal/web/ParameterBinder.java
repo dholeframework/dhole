@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.dhole.http.Request;
+import org.dhole.internal.validation.ValidationRegistry;
 import org.dhole.internal.routing.Route;
 import org.dhole.internal.routing.TypedHandler;
 import org.dhole.routing.RoutingException;
@@ -18,6 +19,9 @@ import org.dhole.serialization.SerializationException;
 import org.dhole.serialization.Serializer;
 import org.dhole.serialization.SerializerRegistry;
 import org.dhole.serialization.TypeRef;
+import org.dhole.validation.Validatable;
+import org.dhole.validation.ValidationResult;
+import org.dhole.validation.Validator;
 import org.dhole.web.BindingException;
 import org.dhole.web.Body;
 import org.dhole.web.Header;
@@ -28,16 +32,22 @@ import org.dhole.web.Query;
  * Builds the {@link BindingPlan} of a typed route from its build-time metadata, at startup. The
  * sources were decided by the metadata compiler; this class only checks that the metadata still
  * matches the registered handler and precomputes a resolver per parameter. Handler signatures are
- * never rediscovered by reflection.
+ * never rediscovered by reflection. A body whose type is {@link Validatable} is validated after
+ * deserialization and before the handler; its rules are prepared here, at startup.
  */
 final class ParameterBinder {
 
     private final RouteMetadata metadata;
     private final SerializerRegistry serializers;
+    private final ValidationRegistry validations;
+    private final Validator validator;
 
-    ParameterBinder(RouteMetadata metadata, SerializerRegistry serializers) {
+    ParameterBinder(RouteMetadata metadata, SerializerRegistry serializers, ValidationRegistry validations,
+            Validator validator) {
         this.metadata = Objects.requireNonNull(metadata, "metadata");
         this.serializers = Objects.requireNonNull(serializers, "serializers");
+        this.validations = Objects.requireNonNull(validations, "validations");
+        this.validator = Objects.requireNonNull(validator, "validator");
     }
 
     /**
@@ -93,8 +103,18 @@ final class ParameterBinder {
             case BODY -> {
                 boolean wrapped = wrapped(type, Body.class);
                 TypeRef<?> body = TypeRef.of(wrapped ? argument(type) : type);
+                boolean validated = Validatable.class.isAssignableFrom(body.rawType());
+                if (validated) {
+                    validations.prepare(body.rawType());
+                }
                 yield request -> {
                     Object value = body(request, body);
+                    if (validated) {
+                        ValidationResult result = validator.validate(value);
+                        if (!result.isValid()) {
+                            throw new ValidationFailedException(result);
+                        }
+                    }
                     return wrapped ? Body.of(value) : value;
                 };
             }
@@ -116,12 +136,12 @@ final class ParameterBinder {
         }
         byte[] content = request.body();
         if (content.length == 0) {
-            throw new BindingException("Missing request body");
+            throw new BindingException("Missing request body.");
         }
         try {
             Object value = serializer.get().deserialize(new ByteArrayInputStream(content), type);
             if (value == null) {
-                throw new BindingException("Missing request body");
+                throw new BindingException("Missing request body.");
             }
             return value;
         } catch (SerializationException e) {
@@ -131,13 +151,12 @@ final class ParameterBinder {
 
     private static Object convert(String value, Class<?> type, String name, String source) {
         if (value == null) {
-            throw new BindingException("Missing " + source + " parameter '" + name + "'");
+            throw InvalidParameterException.missing(name, source);
         }
         try {
             return ConversionService.convert(value, type);
         } catch (IllegalArgumentException e) {
-            throw new BindingException("Invalid " + source + " parameter '" + name + "': expected "
-                    + ConversionService.describe(type), e);
+            throw InvalidParameterException.invalid(name, source, ConversionService.describe(type), e);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.dhole.internal.web;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,11 @@ import org.dhole.internal.json.JacksonJsonSerializer;
 import org.dhole.internal.routing.Route;
 import org.dhole.internal.routing.RouteMatcher;
 import org.dhole.internal.routing.RouteRegistry;
+import org.dhole.internal.validation.DefaultValidator;
+import org.dhole.internal.validation.ValidationMetadata;
+import org.dhole.internal.validation.ValidationRegistry;
 import org.dhole.serialization.SerializerRegistry;
+import org.dhole.validation.Validator;
 import org.dhole.web.Controller;
 
 /**
@@ -31,7 +36,8 @@ import org.dhole.web.Controller;
  *   <li>controllers created and their routes registered;</li>
  *   <li>route conflicts rejected;</li>
  *   <li>a binding plan built for every typed route from {@code routes.idx}; missing, stale or
- *       unusable metadata fails here ("rebuild the application");</li>
+ *       unusable metadata fails here ("rebuild the application"), as do the rules of every
+ *       {@code Validatable} body type;</li>
  *   <li>request pipeline assembled and the server started.</li>
  * </ol>
  * A startup failure closes what was already acquired and rethrows the original failure. Indexed
@@ -57,8 +63,12 @@ final class WebRuntime implements AutoCloseable {
      * @param port the port to bind, {@code 0} for an ephemeral port
      */
     static WebRuntime start(ClassLoader loader, String host, int port) {
+        return start(loader, host, port, RuntimeMode.PRODUCTION);
+    }
+
+    static WebRuntime start(ClassLoader loader, String host, int port, RuntimeMode mode) {
         return start(ComponentMetadata.load(loader), RouteMetadata.load(loader), ContainerBuilder.create(),
-                new JdkHttpServer(host, port));
+                new JdkHttpServer(host, port), Options.defaults().validation(ValidationMetadata.load(loader)).mode(mode));
     }
 
     /**
@@ -70,12 +80,20 @@ final class WebRuntime implements AutoCloseable {
 
     static WebRuntime start(ComponentMetadata metadata, RouteMetadata routeMetadata, ContainerBuilder components,
             HttpServer server) {
+        return start(metadata, routeMetadata, components, server, Options.defaults());
+    }
+
+    static WebRuntime start(ComponentMetadata metadata, RouteMetadata routeMetadata, ContainerBuilder components,
+            HttpServer server, Options options) {
         Objects.requireNonNull(metadata, "metadata");
         Objects.requireNonNull(routeMetadata, "routeMetadata");
         Objects.requireNonNull(components, "components");
         Objects.requireNonNull(server, "server");
+        Objects.requireNonNull(options, "options");
         List<Class<?>> controllers = metadata.providersOf(CONTROLLER).stream().map(metadata::loadClass).toList();
-        DependencyContainer container = components.metadata(metadata).build();
+        ValidationRegistry validations = new ValidationRegistry(options.validation());
+        Validator validator = new DefaultValidator(validations);
+        DependencyContainer container = components.metadata(metadata).bind(Validator.class).toInstance(validator).build();
         try {
             for (Class<?> controller : controllers) {
                 container.graph(controller);
@@ -88,14 +106,15 @@ final class WebRuntime implements AutoCloseable {
             }
             RouteMatcher routes = registry.build();
             SerializerRegistry serializers = SerializerRegistry.of(List.of(new JacksonJsonSerializer()));
-            ParameterBinder binder = new ParameterBinder(routeMetadata, serializers);
+            ParameterBinder binder = new ParameterBinder(routeMetadata, serializers, validations, validator);
             Map<Route, BindingPlan> plans = new HashMap<>();
             for (Route route : routes.routes()) {
                 if (route.typed().isPresent()) {
                     plans.put(route, binder.plan(route, loaders.get(route.controller())));
                 }
             }
-            server.start(new RequestPipeline(routes, container, plans, serializers));
+            server.start(new RequestPipeline(routes, container, plans, serializers, options.errors(), options.mode(),
+                    options.log()));
             return new WebRuntime(server, container, routes);
         } catch (RuntimeException | Error failure) {
             try {
@@ -143,6 +162,41 @@ final class WebRuntime implements AutoCloseable {
             RuntimeException failure = failures.get(0);
             failures.subList(1, failures.size()).forEach(failure::addSuppressed);
             throw failure;
+        }
+    }
+
+    /**
+     * Internal composition options: validation metadata, error handlers, runtime mode and the error
+     * log. Defaults: no validation metadata, built-in error handlers, production, standard error.
+     */
+    record Options(ValidationMetadata validation, ErrorHandlerRegistry errors, RuntimeMode mode, PrintStream log) {
+
+        Options {
+            Objects.requireNonNull(validation, "validation");
+            Objects.requireNonNull(errors, "errors");
+            Objects.requireNonNull(mode, "mode");
+            Objects.requireNonNull(log, "log");
+        }
+
+        static Options defaults() {
+            return new Options(ValidationMetadata.empty(), ErrorHandlerRegistry.defaults(), RuntimeMode.PRODUCTION,
+                    System.err);
+        }
+
+        Options validation(ValidationMetadata validation) {
+            return new Options(validation, errors, mode, log);
+        }
+
+        Options errors(ErrorHandlerRegistry errors) {
+            return new Options(validation, errors, mode, log);
+        }
+
+        Options mode(RuntimeMode mode) {
+            return new Options(validation, errors, mode, log);
+        }
+
+        Options log(PrintStream log) {
+            return new Options(validation, errors, mode, log);
         }
     }
 }

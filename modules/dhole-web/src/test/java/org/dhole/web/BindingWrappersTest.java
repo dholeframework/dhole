@@ -24,7 +24,7 @@ class BindingWrappersTest {
         BindingException query = assertThrows(BindingException.class, () -> Query.of("page", null).value());
         BindingException header = assertThrows(BindingException.class, () -> Header.of("acceptLanguage", null).value());
 
-        assertEquals("Missing query parameter 'page'", query.getMessage());
-        assertEquals("Missing header parameter 'acceptLanguage'", header.getMessage());
+        assertEquals("Missing query parameter 'page'.", query.getMessage());
+        assertEquals("Missing header parameter 'acceptLanguage'.", header.getMessage());
     }
 }

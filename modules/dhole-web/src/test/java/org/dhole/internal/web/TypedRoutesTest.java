@@ -123,8 +123,9 @@ class TypedRoutesTest {
 
         HttpResponse<String> response = send("GET", "/users/abc", null, null, null);
 
-        assertEquals(400, response.statusCode());
-        assertEquals("Bad Request: Invalid path parameter 'id': expected long", response.body());
+        assertEquals("{\"error\":{\"code\":\"INVALID_PARAMETER\",\"message\":\"Invalid path parameter 'id': expected long.\","
+                + "\"details\":{\"parameter\":\"id\",\"source\":\"path\",\"expected\":\"long\"},\"requestId\":\"*\"}}",
+                ErrorBodies.envelope(response, 400));
         assertEquals(List.of(), log.events());
     }
 
@@ -155,11 +156,11 @@ class TypedRoutesTest {
         HttpResponse<String> unknown = send("POST", "/users", "{\"name\":\"a\",\"admin\":true}", "application/json", null);
         HttpResponse<String> empty = send("POST", "/users", "", "application/json", null);
 
-        assertEquals(400, malformed.statusCode());
-        assertEquals("Bad Request: Invalid request body: Malformed JSON", malformed.body());
-        assertEquals(400, unknown.statusCode());
-        assertEquals("Bad Request: Invalid request body: Unknown JSON property '$.admin'", unknown.body());
-        assertEquals("Bad Request: Missing request body", empty.body());
+        assertEquals(ErrorBodies.error("BAD_REQUEST", "Invalid request body: Malformed JSON"),
+                ErrorBodies.envelope(malformed, 400));
+        assertEquals(ErrorBodies.error("BAD_REQUEST", "Invalid request body: Unknown JSON property '$.admin'"),
+                ErrorBodies.envelope(unknown, 400));
+        assertEquals(ErrorBodies.error("BAD_REQUEST", "Missing request body."), ErrorBodies.envelope(empty, 400));
         assertFalse(malformed.body().contains("jackson") || malformed.body().contains("Jackson"), malformed.body());
     }
 
@@ -180,8 +181,8 @@ class TypedRoutesTest {
         assertEquals(200, send("GET", "/users/1", null, null, "text/html, application/*;q=0.5").statusCode());
         List<String> before = log.events();
         HttpResponse<String> rejected = send("GET", "/users/1", null, null, "text/html");
-        assertEquals(406, rejected.statusCode());
-        assertEquals("Not Acceptable", rejected.body());
+        assertEquals(ErrorBodies.error("NOT_ACCEPTABLE", "None of the accepted media types can be produced."),
+                ErrorBodies.envelope(rejected, 406));
         assertEquals(before, log.events());
         assertEquals("user 3", send("GET", "/users/3/name", null, null, "text/plain").body());
         assertEquals(406, send("GET", "/users/3/name", null, null, "application/json").statusCode());
@@ -198,7 +199,9 @@ class TypedRoutesTest {
         assertEquals(400, send("GET", "/users", null, null, null).statusCode());
         HttpResponse<String> badHeader = client.send(HttpRequest.newBuilder(uri("/users?term=ma"))
                 .header("Page-Size", "two").build(), BodyHandlers.ofString());
-        assertEquals("Bad Request: Invalid header parameter 'pageSize': expected Integer", badHeader.body());
+        assertTrue(ErrorBodies.envelope(badHeader, 400).contains("\"code\":\"INVALID_PARAMETER\",\"message\":\"Invalid header "
+                + "parameter 'pageSize': expected Integer.\",\"details\":{\"parameter\":\"pageSize\",\"source\":\"header\""),
+                badHeader.body());
     }
 
     @Test

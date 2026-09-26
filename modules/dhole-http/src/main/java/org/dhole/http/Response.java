@@ -56,6 +56,10 @@ public final class Response {
         return status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    public static Response conflict(Object body) {
+        return status(HttpStatus.CONFLICT).body(body);
+    }
+
     /**
      * Returns a copy with one more header value.
      */
