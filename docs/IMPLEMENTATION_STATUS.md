@@ -19,7 +19,7 @@ M5 — HTTP + Routing
 ## Current Slice
 
 ```text
-M5 complete locally (final slice: hello-api served over HTTP)
+M5 complete (final slice: hello-api served over HTTP; 405 Allow and HEAD corrections)
 ```
 
 ## Status
@@ -30,7 +30,7 @@ M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
-M5 — HTTP + Routing          COMPLETE LOCALLY (GitHub Actions not yet run on the M5 commits)
+M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
 M6 — Serialization + Binding NOT STARTED
 ```
 
@@ -289,7 +289,7 @@ Roadmap §8, verified:
 
 ### M5 — HTTP + Routing
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 Public API:
@@ -634,7 +634,7 @@ ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Act
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
 0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
 e17a78e docs(status): finalize M4 build integration   (local clean build + GitHub Actions "build" run 36245781250, success)
-9985c20 feat(example): serve hello endpoint   (local clean build only; GitHub Actions not yet run)
+f539d9e fix(http): complete 405 and HEAD semantics   (local clean build + GitHub Actions "build" run 36247823999, success)
 ```
 
 ---
@@ -658,9 +658,8 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M5 commits.
-2. M6 — Serialization + Parameter Binding (NOT STARTED). Start only on explicit request.
-   Note the M5 constraint on typed handlers (ROUTING.md §14).
+M6 — Serialization + Parameter Binding
+Note the M5 constraint on typed handlers (ROUTING.md §14).
 ```
 
 Read before M6:
