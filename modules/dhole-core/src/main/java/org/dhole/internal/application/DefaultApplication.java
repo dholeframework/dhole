@@ -1,37 +1,35 @@
 package org.dhole.internal.application;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.dhole.application.Application;
 import org.dhole.application.ApplicationContext;
 import org.dhole.application.ApplicationState;
+import org.dhole.internal.lifecycle.LifecycleManager;
 
 /**
  * Default {@link Application} implementation.
  *
- * <p>Lifecycle transitions are claimed atomically, so concurrent calls cannot both succeed.
+ * <p>Lifecycle behaviour is delegated to the application's {@link LifecycleManager}.
  */
 final class DefaultApplication implements Application {
 
     private final ApplicationContext context;
-    private final AtomicReference<ApplicationState> state =
-            new AtomicReference<>(ApplicationState.CREATED);
+    private final LifecycleManager lifecycle;
 
-    DefaultApplication(ApplicationContext context) {
+    DefaultApplication(ApplicationContext context, LifecycleManager lifecycle) {
         this.context = Objects.requireNonNull(context, "context");
+        this.lifecycle = Objects.requireNonNull(lifecycle, "lifecycle");
     }
 
     @Override
     public void start() {
-        transition("start", ApplicationState.CREATED, ApplicationState.STARTING);
-        state.set(ApplicationState.RUNNING);
+        lifecycle.start();
     }
 
     @Override
     public void stop() {
-        transition("stop", ApplicationState.RUNNING, ApplicationState.STOPPING);
-        state.set(ApplicationState.STOPPED);
+        lifecycle.stop();
     }
 
     @Override
@@ -41,14 +39,6 @@ final class DefaultApplication implements Application {
 
     @Override
     public ApplicationState state() {
-        return state.get();
-    }
-
-    private void transition(String operation, ApplicationState expected, ApplicationState next) {
-        if (!state.compareAndSet(expected, next)) {
-            throw new IllegalStateException(
-                    "Cannot " + operation + " application in state " + state.get()
-                            + "; expected " + expected);
-        }
+        return lifecycle.state();
     }
 }

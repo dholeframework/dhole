@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import org.dhole.application.ApplicationContext;
 import org.dhole.application.ApplicationState;
+import org.dhole.internal.lifecycle.LifecycleManager;
 import org.junit.jupiter.api.Test;
 
 class DefaultApplicationTest {
@@ -76,7 +80,7 @@ class DefaultApplicationTest {
     @Test
     void contextIsTheOneOwnedByTheApplicationInEveryState() {
         ApplicationContext context = new DefaultApplicationContext();
-        DefaultApplication application = new DefaultApplication(context);
+        DefaultApplication application = new DefaultApplication(context, newLifecycle());
 
         assertSame(context, application.context());
         application.start();
@@ -87,10 +91,20 @@ class DefaultApplicationTest {
 
     @Test
     void applicationRequiresAContext() {
-        assertThrows(NullPointerException.class, () -> new DefaultApplication(null));
+        assertThrows(NullPointerException.class, () -> new DefaultApplication(null, newLifecycle()));
+    }
+
+    @Test
+    void applicationRequiresALifecycle() {
+        assertThrows(NullPointerException.class,
+                () -> new DefaultApplication(new DefaultApplicationContext(), null));
     }
 
     private static DefaultApplication newApplication() {
-        return new DefaultApplication(new DefaultApplicationContext());
+        return new DefaultApplication(new DefaultApplicationContext(), newLifecycle());
+    }
+
+    private static LifecycleManager newLifecycle() {
+        return new LifecycleManager(new PrintStream(OutputStream.nullOutputStream()));
     }
 }
