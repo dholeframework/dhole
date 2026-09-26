@@ -24,14 +24,23 @@ import org.dhole.di.DependencyException;
  * container lock, so each singleton is created exactly once. Resolutions that only create
  * prototypes over existing singletons run without the lock. Singletons created by a resolution
  * become visible to other resolutions only when that resolution succeeds.
+ *
+ * <p>Resources: the container owns the {@link AutoCloseable} singletons it creates and instances
+ * whose ownership was transferred with {@code toOwnedInstance}; it never closes external instances.
+ * Prototypes are owned by whoever receives them. {@link #close()} closes owned resources in reverse
+ * creation order, so dependents close before their dependencies. A resolution or startup that
+ * fails closes, in reverse creation order, every owned resource it created (prototypes included)
+ * and rethrows the original failure with cleanup failures attached as suppressed exceptions.
  */
-final class DependencyContainer {
+final class DependencyContainer implements AutoCloseable {
 
     private final ComponentRegistry registry;
     private final ReentrantLock lock = new ReentrantLock();
     private final Map<ComponentDefinition, Object> singletons = new ConcurrentHashMap<>();
     private final Map<Class<?>, DependencyGraph> graphs = new ConcurrentHashMap<>();
     private final DependencyGraph registered;
+    private final List<OwnedResource> owned = new ArrayList<>();
+    private volatile boolean closed;
 
     private DependencyContainer(ComponentRegistry registry) {
         this.registry = registry;
@@ -57,6 +66,7 @@ final class DependencyContainer {
      */
     <T> T resolve(Class<T> type) {
         Objects.requireNonNull(type, "type");
+        ensureOpen();
         DependencyNode node = graph(type).roots().get(0);
         Object cached = singletons.get(node.definition());
         if (cached != null) {
@@ -67,6 +77,7 @@ final class DependencyContainer {
         }
         lock.lock();
         try {
+            ensureOpen();
             return type.cast(new Resolution().run(node));
         } finally {
             lock.unlock();
@@ -86,6 +97,52 @@ final class DependencyContainer {
      */
     DependencyGraph registeredGraph() {
         return registered;
+    }
+
+    /**
+     * Closes every owned resource in reverse creation order. Every resource is closed even if some
+     * fail; failures are reported together. Closing twice does nothing.
+     *
+     * @throws DependencyException listing the resources that failed to close, each failure attached
+     *         as a suppressed exception
+     */
+    @Override
+    public void close() {
+        lock.lock();
+        try {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            List<OwnedResource> failed = new ArrayList<>();
+            List<Exception> failures = new ArrayList<>();
+            for (int index = owned.size() - 1; index >= 0; index--) {
+                OwnedResource resource = owned.get(index);
+                try {
+                    resource.instance().close();
+                } catch (Exception e) {
+                    failed.add(resource);
+                    failures.add(e);
+                }
+            }
+            owned.clear();
+            singletons.clear();
+            if (!failures.isEmpty()) {
+                DependencyException failure = new DependencyException("Dependency Error\n\nFailed to close "
+                        + failed.size() + " component(s):\n"
+                        + String.join("\n", failed.stream().map(r -> "- " + DependencyMessages.name(r.type())).toList()));
+                failures.forEach(failure::addSuppressed);
+                throw failure;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("The dependency container is closed.");
+        }
     }
 
     private void startSingletons() {
@@ -127,15 +184,41 @@ final class DependencyContainer {
         private final Map<ComponentDefinition, Object> pendingSingletons = new LinkedHashMap<>();
         private final List<Class<?>> path = new ArrayList<>();
         private final List<ComponentDefinition> inProgress = new ArrayList<>();
+        private final List<OwnedResource> created = new ArrayList<>();
 
         Object run(DependencyNode root) {
             return run(() -> create(root));
         }
 
+        /**
+         * Runs {@code action}; publishes the created singletons and their owned resources on
+         * success, closes every owned resource it created on failure.
+         */
         Object run(Supplier<Object> action) {
-            Object result = action.get();
+            Object result;
+            try {
+                result = action.get();
+            } catch (RuntimeException | Error failure) {
+                rollback(failure);
+                throw failure;
+            }
             singletons.putAll(pendingSingletons);
+            for (OwnedResource resource : created) {
+                if (resource.singleton()) {
+                    owned.add(resource);
+                }
+            }
             return result;
+        }
+
+        private void rollback(Throwable failure) {
+            for (int index = created.size() - 1; index >= 0; index--) {
+                try {
+                    created.get(index).instance().close();
+                } catch (Exception cleanupFailure) {
+                    failure.addSuppressed(cleanupFailure);
+                }
+            }
         }
 
         @Override
@@ -169,8 +252,12 @@ final class DependencyContainer {
                     dependencies.add(create(dependency));
                 }
                 Object instance = instantiate(definition, dependencies);
-                if (definition.scope() == ComponentScope.SINGLETON) {
+                boolean singleton = definition.scope() == ComponentScope.SINGLETON;
+                if (singleton) {
                     pendingSingletons.put(definition, instance);
+                }
+                if (definition.owned() && instance instanceof AutoCloseable closeable) {
+                    created.add(new OwnedResource(definition.type(), closeable, singleton));
                 }
                 return instance;
             } finally {
@@ -198,5 +285,8 @@ final class DependencyContainer {
             }
             return instance;
         }
+    }
+
+    private record OwnedResource(Class<?> type, AutoCloseable instance, boolean singleton) {
     }
 }
