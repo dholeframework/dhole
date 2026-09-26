@@ -19,14 +19,15 @@ M1 — Core Runtime
 ## Current Slice
 
 ```text
-Slice 4 — ApplicationContext (complete)
+M1 complete locally (final slice: shutdown handling)
 ```
 
 ## Status
 
 ```text
 M0 — Repository Foundation   COMPLETE
-M1 — Core Runtime            IN PROGRESS (Slices 1–4 complete; startup failure blocker resolved)
+M1 — Core Runtime            COMPLETE LOCALLY (remote CI not yet run on the M1 commits)
+M2 — Configuration           NOT STARTED
 ```
 
 ---
@@ -72,7 +73,7 @@ hello-api     -> implementation(dhole-core)
 bookstore-api -> implementation(dhole-core)
 ```
 
-All modules other than the smoke test contain no source code yet.
+Only dhole-core (M1 runtime) and examples/hello-api (M1 demo application) contain code.
 
 ---
 
@@ -94,21 +95,39 @@ None.
 
 ### M1 — Core Runtime
 
-Status: IN PROGRESS
+Status: COMPLETE LOCALLY
 
 ```text
-[ ] Dhole
-[x] Application — start(), stop(), context(), state() (Slice 2; context() added in Slice 4)
-[x] DefaultApplication — package-private final; basic transitions (Slice 3):
-    CREATED -> STARTING -> RUNNING on start(), RUNNING -> STOPPING -> STOPPED on stop();
-    other calls throw IllegalStateException; transitions claimed atomically (AtomicReference CAS)
-    FAILED transition deferred until a fallible startup/shutdown operation exists; see Known Issues
-[x] ApplicationState — org.dhole.application.ApplicationState + ApplicationStateTest (Slice 1)
-[x] ApplicationContext — public interface, no members yet (Slice 4); see Known Issues
-[x] DefaultApplicationContext — package-private final (Slice 4)
-[ ] Bootstrap
-[ ] LifecycleManager
-[ ] shutdown handling
+Public API:
+[x] org.dhole.Dhole — run(Class<?>): bootstrap, register JVM shutdown hook, start
+[x] org.dhole.application.Application — start(), stop(), context(), state()
+[x] org.dhole.application.ApplicationContext — public interface, no members yet; see Known Issues
+[x] org.dhole.application.ApplicationState — CREATED, STARTING, RUNNING, STOPPING, STOPPED, FAILED
+
+Internal (org.dhole.internal.*, no compatibility guarantees):
+[x] application.DefaultApplication — delegates lifecycle; shutdown() for the JVM hook
+[x] application.DefaultApplicationContext — package-private
+[x] application.ApplicationBuilder — assembles context + LifecycleManager + application
+[x] bootstrap.Bootstrap — create(Class<?>).build(): prints "Dhole" banner, assembles application
+[x] lifecycle.LifecycleManager — atomic (CAS) transitions and progress output:
+    start(): CREATED -> STARTING -> RUNNING ("Application starting...", "Application ready.")
+    stop():  RUNNING -> STOPPING -> STOPPED ("Application stopped.")
+    other start()/stop() calls: IllegalStateException naming operation and current state
+    stopIfRunning(): used by the shutdown hook; stops only from RUNNING, otherwise no-op
+[x] examples/hello-api example.hello.App — Dhole.run(App.class); prints the roadmap M1 output
+
+Not created (no M1 responsibility; owner decision): BootstrapContext, BootstrapException,
+LifecycleException, StartupTask.
+
+Amended roadmap §5 acceptance, verified against code/tests:
+[x] application starts / changes state correctly / cannot start twice / stops
+    (LifecycleManagerTest, DefaultApplicationTest)
+[x] shutdown hook safe in every state reachable in M1 (CREATED, RUNNING, STOPPED:
+    LifecycleManagerTest, DefaultApplicationTest; real JVM exit: DholeTest child process)
+[x] Dhole.run() works (DholeTest, example.hello.App run manually)
+[x] no HTTP/database/config; dhole-core has no project dependencies (verifyCoreIsolation)
+[-] startup failure -> FAILED, shutdown after partial startup: conditional tests, deferred
+    (no real fallible startup operation in M1); no artificial failure source introduced
 ```
 
 ---
@@ -116,6 +135,21 @@ Status: IN PROGRESS
 ## Tests
 
 ```text
+M1 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 59 tasks (50 executed), no warnings
+  org.dhole.internal.application.DefaultApplicationTest 12 tests, PASSED
+  org.dhole.internal.lifecycle.LifecycleManagerTest      9 tests, PASSED
+  org.dhole.internal.application.ApplicationBuilderTest  4 tests, PASSED
+  org.dhole.internal.bootstrap.BootstrapTest             3 tests, PASSED
+  org.dhole.DholeTest                                    3 tests, PASSED (incl. child-JVM shutdown hook)
+  org.dhole.application.ApplicationStateTest             1 test, PASSED
+  org.dhole.BuildInfrastructureSmokeTest                 1 test, PASSED
+  total                                                 33 tests, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+java -cp modules/dhole-core/build/classes/java/main;examples/hello-api/build/classes/java/main example.hello.App
+  output: Dhole / (blank) / Application starting... / Application ready. / Application stopped.   exit 0
+
 M1 Slice 4 (JDK 21.0.12, Windows 11):
 ./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL
@@ -176,11 +210,20 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 - ApplicationContext declares no members yet. Every member in CORE_ARCHITECTURE.md §21
   (environment, settings, modules, plugins, lifecycle) depends on a type from a later milestone;
   each is added when its type exists.
-- DefaultApplication never enters FAILED yet: no fallible startup/shutdown operation exists.
-  The FAILED transition, rollback and "startup failure -> FAILED" / "shutdown after partial
-  startup" tests are deferred to the first milestone with a real fallible startup operation.
-- DefaultApplication.stop() is only valid from RUNNING. Shutdown-hook behaviour for other
-  states (CORE_ARCHITECTURE.md §41) is not decided yet and belongs to the shutdown handling slice.
+- FAILED remains in the lifecycle model but is unreachable in M1: no real fallible startup
+  operation exists. The FAILED transition, rollback and the "startup failure -> FAILED" /
+  "shutdown after partial startup" tests are mandatory in the first milestone that introduces
+  a real fallible startup operation (not necessarily M4). No artificial failure source exists.
+- Public StartupTask API and registration remain deferred (CORE_ARCHITECTURE.md §40, §64).
+- Application.stop() stays strict (RUNNING only). The JVM shutdown hook uses the internal
+  stopIfRunning() and is a no-op outside RUNNING. A JVM shutdown while start() is still in
+  STARTING does not stop the application; M1 has nothing to release, so this is harmless now.
+- Bootstrap.create(Class<?>) only validates the application class; the application root
+  (CORE_ARCHITECTURE.md §9) has no M1 consumer and is not computed yet.
+- M1 progress output is plain text on System.out (roadmap §5 "Saída"); structured
+  logging belongs to observability (M12).
+- DholeTest.runBootstrapsAndStartsTheApplication registers a real shutdown hook in the test
+  JVM; it stops that application when the test JVM exits (output goes to a discarded stream).
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -232,6 +275,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 
 ```text
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
+ed51e89 feat(core): add shutdown handling (local clean build only; GitHub Actions not yet run)
 ```
 
 ---
@@ -255,16 +299,16 @@ git status
 ## Next Recommended Action
 
 ```text
-M1 — Core Runtime
-Internalize implementation types, then bootstrap, lifecycle orchestration,
-Dhole entry point and shutdown hook.
+1. Push main and confirm the GitHub Actions "build" workflow passes on the M1 commits.
+2. M2 — Configuration (NOT STARTED). Start only on explicit request.
 ```
 
-Read before M1:
+Read before M2:
 
 ```text
-docs/CORE_ARCHITECTURE.md
-docs/IMPLEMENTATION_ROADMAP.md (section 5)
+docs/CONFIGURATION.md
+docs/IMPLEMENTATION_ROADMAP.md (section 6)
+docs/CORE_ARCHITECTURE.md (sections 10, 11)
 docs/DEVELOPMENT.md
 ```
 
