@@ -26,6 +26,20 @@ public final class ModulesIndexGenerator {
     }
 
     /**
+     * Internal repository harness only (the Dhole build calls {@link #write} directly): writes the
+     * index for the given runtime artifacts into a resource directory.
+     *
+     * <p>Arguments: the output directory, then the runtime artifacts.
+     */
+    public static void main(String[] args) {
+        List<Path> runtime = new ArrayList<>();
+        for (int index = 1; index < args.length; index++) {
+            runtime.add(Path.of(args[index]));
+        }
+        write(runtime, Path.of(args[0]));
+    }
+
+    /**
      * @throws BuildException if a descriptor is malformed or the module graph is invalid
      */
     public static String generate(List<Path> runtime) {
