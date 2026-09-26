@@ -19,14 +19,14 @@ M1 — Core Runtime
 ## Current Slice
 
 ```text
-Slice 1 — ApplicationState (complete)
+Slice 2 — Application interface (complete)
 ```
 
 ## Status
 
 ```text
 M0 — Repository Foundation   COMPLETE
-M1 — Core Runtime            IN PROGRESS (Slice 1 of M1 complete)
+M1 — Core Runtime            IN PROGRESS (Slices 1–2 of M1 complete)
 ```
 
 ---
@@ -98,7 +98,8 @@ Status: IN PROGRESS
 
 ```text
 [ ] Dhole
-[ ] Application
+[x] Application — org.dhole.application.Application: start(), stop(), state() (Slice 2)
+    context() deferred until ApplicationContext exists (Slice 4); see Known Issues
 [ ] DefaultApplication
 [x] ApplicationState — org.dhole.application.ApplicationState + ApplicationStateTest (Slice 1)
 [ ] ApplicationContext
@@ -113,6 +114,14 @@ Status: IN PROGRESS
 ## Tests
 
 ```text
+M1 Slice 2 (JDK 21.0.12, Windows 11):
+./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL
+  no new test: Application is a behavior-free interface; lifecycle behavior
+  tests belong to DefaultApplication (Slice 3)
+./gradlew build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL
+
 M1 Slice 1 (JDK 21.0.12, Windows 11):
 ./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL
@@ -144,6 +153,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 ## Known Issues
 
 ```text
+- Application does not yet declare context() from CORE_ARCHITECTURE.md §6; it is added
+  together with ApplicationContext (Slice 4) instead of introducing a placeholder type now.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -194,7 +205,7 @@ git status
 
 ```text
 M1 — Core Runtime
-Slice 2 — Application interface
+Slice 3 — DefaultApplication lifecycle
 ```
 
 Read before M1:
