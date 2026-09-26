@@ -407,11 +407,31 @@ production restrictions basic
 
 ## Critério de conclusão
 
+O M2 entrega o subsistema de configuração como módulo standalone (`dhole-config`), testado diretamente:
+
 ```text
-✓ application starts with typed config
-✓ missing required config fails before RUNNING
-✓ .env works locally
-✓ secrets are not printed
+✓ typed configuration can be loaded and validated
+✓ .env and process environment precedence works
+✓ missing required configuration fails configuration loading
+✓ malformed typed configuration fails configuration loading
+✓ secret values remain masked (.env works locally; secrets are not printed)
+✓ production restrictions are enforced
+✓ dhole-config remains independently testable
+✓ dhole-core remains independent of dhole-config
+```
+
+## Integração no startup (adiada)
+
+O M2 não liga `dhole-config` a `Dhole.run()`.
+
+`dhole-core` não depende de `dhole-config`, e não se introduz SPI temporária, `ServiceLoader` nem entry point alternativo.
+
+A integração ocorre quando existir o mecanismo real de módulos/ativação (ainda sem milestone atribuído). Nesse momento tornam-se obrigatórios:
+
+```text
+configuration validation happens before RUNNING
+configuration failure -> FAILED
+shutdown after such a failed startup is safe
 ```
 
 ---

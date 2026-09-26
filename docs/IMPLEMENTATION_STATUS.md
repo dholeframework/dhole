@@ -13,13 +13,13 @@ v0.1
 ## Current Milestone
 
 ```text
-M1 — Core Runtime
+M2 — Configuration
 ```
 
 ## Current Slice
 
 ```text
-M1 complete (final slice: shutdown handling)
+M2 architecture decisions recorded; implementation starting
 ```
 
 ## Status
@@ -27,7 +27,7 @@ M1 complete (final slice: shutdown handling)
 ```text
 M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
-M2 — Configuration           NOT STARTED
+M2 — Configuration           IN PROGRESS
 ```
 
 ---
@@ -267,6 +267,26 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M2 — Configuration
+
+```text
+- M2 is a standalone configuration subsystem in dhole-config, tested directly. It is not
+  wired into Dhole.run(): no core SPI, no ServiceLoader, no alternative entry point,
+  dhole-core stays independent of dhole-config. Startup integration (validation before
+  RUNNING, configuration failure -> FAILED, safe shutdown after it) becomes mandatory once
+  the real module/activation mechanism exists (no milestone assigned yet).
+  (IMPLEMENTATION_ROADMAP.md §6)
+- Environment is configuration API: org.dhole.config.Environment in dhole-config.
+  ApplicationContext gets no environment()/settings() in M2; no bridging abstraction.
+  (CORE_ARCHITECTURE.md §10, §21, §59)
+- Settings lookup: exactly <application package>.config.Settings via the application class's
+  class loader, requiring public static void configure(SettingsBuilder); absent class = no
+  error; no scanning. (CONFIGURATION.md §2)
+- Production (APP_ENV=production): .env not read; secrets must come from the process
+  environment (no default, no .env); non-secret defaults allowed. APP_ENV must be exactly
+  development, test or production; absent -> development. (CONFIGURATION.md §4, §5, §10)
 ```
 
 ---

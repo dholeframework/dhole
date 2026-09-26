@@ -313,6 +313,8 @@ test overrides
 
 Secrets não são propriedades do `ApplicationContext` expostas indiscriminadamente.
 
+Decisão (M2): `Environment` é API de configuração e vive em `dhole-config` como `org.dhole.config.Environment`, não em `dhole-core`. O `dhole-core` não depende de `dhole-config`.
+
 ---
 
 # 11. `Settings`
@@ -629,6 +631,8 @@ public interface ApplicationContext {
     Lifecycle lifecycle();
 }
 ```
+
+Decisão (M2): `environment()` e `settings()` não são adicionados enquanto não existir o mecanismo de integração de módulos, porque os tipos de configuração vivem em `dhole-config` e o M2 não cria dependência `dhole-core -> dhole-config`. O `ApplicationContext` passa a expor capacidades de configuração apenas através desse mecanismo futuro.
 
 O `ApplicationContext` não deve tornar-se um "global bag".
 
@@ -1547,6 +1551,11 @@ dhole-core/
 ```
 
 Esta estrutura é conceptual e pode evoluir durante a implementação.
+
+Evolução já decidida:
+
+- `environment/` não faz parte do `dhole-core`: `Environment` e o respetivo loading vivem em `dhole-config` (`org.dhole.config`).
+- Implementações internas (`DefaultApplication`, `ApplicationBuilder`, `Bootstrap`, `LifecycleManager`) vivem em `org.dhole.internal.*` (ver secção 52).
 
 ---
 

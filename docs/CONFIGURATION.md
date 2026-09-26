@@ -55,6 +55,14 @@ public final class Settings {
 
 A API exata poderá evoluir, mas a regra não muda: configuração é Java.
 
+Decisão (M2) — localização de `Settings`:
+
+- a partir da classe da aplicação (ex.: `com.example.shop.App`), procura-se exatamente `com.example.shop.config.Settings`, com o class loader da classe da aplicação;
+- sem scanning, sem `ServiceLoader`, sem pesquisa noutros packages;
+- ausência da classe não é erro: aplicam-se environment e defaults;
+- se existir, exige `public static void configure(SettingsBuilder settings)`; qualquer outra forma é `ConfigurationException`;
+- o M4 pode substituir internamente esta localização por metadata sem mudar a convenção do código da aplicação.
+
 ---
 
 ## 3. `.env`
@@ -93,6 +101,14 @@ Ordem proposta:
 
 Para a v0.1 de implementação, o conjunto pode ser reduzido. A regra fundamental é que variáveis externas têm prioridade sobre defaults.
 
+Conjunto implementado no M2:
+
+```text
+1. process environment
+2. .env            (não usado em production)
+3. defaults declared in Settings.java
+```
+
 ---
 
 ## 5. Production
@@ -117,6 +133,14 @@ cloud platform
 CI/CD
 secret manager adapter
 ```
+
+Decisão (M2) — restrições básicas de production (`APP_ENV=production`):
+
+- ficheiros `.env` são ignorados por completo (não são lidos);
+- o process environment é a fonte externa autoritativa;
+- defaults continuam permitidos para settings não secretos;
+- settings secretos não podem resolver a partir de defaults e têm de vir do process environment;
+- a violação é `ConfigurationException`, sem expor o valor.
 
 ---
 
@@ -206,6 +230,8 @@ production
 ```
 
 Custom environments poderão existir mais tarde.
+
+No M2, `APP_ENV` aceita exatamente estes três valores (sem aliases como `prod` ou `local`); qualquer outro valor é `ConfigurationException`. Sem `APP_ENV`, o environment é `development` (ver exemplo da secção 2).
 
 ---
 
