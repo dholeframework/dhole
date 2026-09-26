@@ -189,6 +189,46 @@ class CliTest {
     }
 
     @Test
+    void runBuildsAndStartsTheApplicationWithArguments() throws Exception {
+        Path project = newProject("hello");
+        int port = freePort();
+
+        Running run = start(project, Map.of("APP_PORT", Integer.toString(port)), dholeCommand("run", "--", "ignored"));
+        run.await("Application ready.");
+
+        assertEquals("Hello from Hello", get(port, "/hello"));
+        assertTrue(run.output().contains("Server http://localhost:" + port + " (development)"), run.output());
+        assertTrue(Files.exists(project.resolve("dhole.lock")));
+        run.stop();
+        assertRefused(port);
+    }
+
+    @Test
+    void installationInAPathWithSpacesWorks() throws Exception {
+        Path home = temporary.resolve("Dhole Home");
+        try (Stream<Path> walk = Files.walk(HOME)) {
+            for (Path source : walk.toList()) {
+                Path target = home.resolve(HOME.relativize(source).toString());
+                if (Files.isDirectory(source)) {
+                    Files.createDirectories(target);
+                } else {
+                    Files.copy(source, target);
+                }
+            }
+        }
+        Path work = Files.createDirectories(temporary.resolve("projects"));
+        List<String> command = new ArrayList<>(script(home.resolve("bin/dhole")));
+        command.addAll(List.of("new", "spaced"));
+        Process process = builder(work, Map.of(), command).start();
+        process.getOutputStream().close();
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+        assertTrue(process.waitFor(TIMEOUT.toSeconds(), TimeUnit.SECONDS));
+        assertEquals(0, process.exitValue(), output);
+        assertTrue(Files.readString(work.resolve("spaced/dhole.toml")).contains("version = \"0.1.0\""));
+    }
+
+    @Test
     void failuresAreActionable() throws Exception {
         Path empty = Files.createDirectories(temporary.resolve("empty"));
         Result noProject = dhole(empty, Map.of(), "build");
