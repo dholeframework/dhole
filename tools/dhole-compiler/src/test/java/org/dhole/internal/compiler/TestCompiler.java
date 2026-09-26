@@ -21,27 +21,28 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 /**
- * Compiles in-memory Java sources with the metadata processor into a directory.
+ * Compiles in-memory Java sources with the metadata processor into a directory. Public for the
+ * end-to-end tests in other test packages.
  */
-final class TestCompiler {
+public final class TestCompiler {
 
     private final Map<String, String> sources = new TreeMap<>();
     private final List<String> options = new ArrayList<>();
     private final List<Path> classpath = new ArrayList<>();
 
-    static TestCompiler create() {
+    public static TestCompiler create() {
         return new TestCompiler();
     }
 
     /**
      * Adds a source, for example {@code source("com.acme.App", "package com.acme; ...")}.
      */
-    TestCompiler source(String className, String code) {
+    public TestCompiler source(String className, String code) {
         sources.put(className, code);
         return this;
     }
 
-    TestCompiler application(String className) {
+    public TestCompiler application(String className) {
         options.add("-A" + MetadataProcessor.APPLICATION_OPTION + "=" + className);
         return this;
     }
@@ -56,7 +57,7 @@ final class TestCompiler {
         return this;
     }
 
-    Result compile(Path output, Processor... extraProcessors) {
+    public Result compile(Path output, Processor... extraProcessors) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         List<JavaFileObject> units = sources.entrySet().stream()
@@ -90,9 +91,9 @@ final class TestCompiler {
         }
     }
 
-    record Result(boolean success, List<String> diagnostics, Path output) {
+    public record Result(boolean success, List<String> diagnostics, Path output) {
 
-        Optional<String> index() {
+        public Optional<String> index() {
             Path file = output.resolve(ComponentIndexWriter.LOCATION);
             try {
                 return Files.exists(file) ? Optional.of(Files.readString(file, StandardCharsets.UTF_8)) : Optional.empty();
