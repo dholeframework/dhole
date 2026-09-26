@@ -8,6 +8,8 @@ dependencies {
     testImplementation(project(":dhole-di"))
     // Route analysis fixtures are controllers written against the public web API.
     testImplementation(project(":dhole-web"))
+    // Validation analysis fixtures are Validatable types written against the public validation API.
+    testImplementation(project(":dhole-validation"))
 }
 
 // Internal repository harness (not the Dhole application build contract): a small fixture

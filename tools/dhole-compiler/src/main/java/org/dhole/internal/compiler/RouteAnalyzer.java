@@ -198,7 +198,7 @@ final class RouteAnalyzer {
                 return;
             }
             Optional<List<RouteRecord.Parameter>> parameters = classify(to, method, path, handler);
-            Optional<String> response = typeName(handler.getReturnType());
+            Optional<String> response = typeName(elements, handler.getReturnType());
             if (response.isEmpty()) {
                 problem(DiagnosticCode.BIND_TYPE_UNSUPPORTED, to, "The response type " + handler.getReturnType()
                         + " of route " + method + " " + path + " is not supported (type variables and wildcards).");
@@ -226,7 +226,7 @@ final class RouteAnalyzer {
             for (VariableElement parameter : handler.getParameters()) {
                 String name = parameter.getSimpleName().toString();
                 TypeMirror type = parameter.asType();
-                Optional<String> typeName = typeName(type);
+                Optional<String> typeName = typeName(elements, type);
                 if (typeName.isEmpty()) {
                     valid = fail(DiagnosticCode.BIND_TYPE_UNSUPPORTED, at, "Parameter '" + name + "' of route " + route
                             + " has the unsupported type " + type + " (type variables and wildcards).");
@@ -355,12 +355,12 @@ final class RouteAnalyzer {
      * Renders a type for {@code routes.idx}: binary names, generic arguments without spaces,
      * {@code []} for arrays, {@code void}; empty for type variables and wildcards.
      */
-    private Optional<String> typeName(TypeMirror type) {
+    static Optional<String> typeName(Elements elements, TypeMirror type) {
         if (type.getKind().isPrimitive() || type.getKind() == TypeKind.VOID) {
             return Optional.of(type.toString());
         }
         if (type.getKind() == TypeKind.ARRAY) {
-            return typeName(((ArrayType) type).getComponentType()).map(component -> component + "[]");
+            return typeName(elements, ((ArrayType) type).getComponentType()).map(component -> component + "[]");
         }
         if (type.getKind() != TypeKind.DECLARED) {
             return Optional.empty();
@@ -370,7 +370,7 @@ final class RouteAnalyzer {
         if (!declared.getTypeArguments().isEmpty()) {
             List<String> arguments = new ArrayList<>();
             for (TypeMirror argument : declared.getTypeArguments()) {
-                Optional<String> rendered = typeName(argument);
+                Optional<String> rendered = typeName(elements, argument);
                 if (rendered.isEmpty()) {
                     return Optional.empty();
                 }

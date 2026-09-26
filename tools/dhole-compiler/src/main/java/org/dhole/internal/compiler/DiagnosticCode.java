@@ -41,7 +41,32 @@ enum DiagnosticCode {
     /**
      * A parameter or response type is not supported for its source.
      */
-    BIND_TYPE_UNSUPPORTED("DHOLE-BIND-004");
+    BIND_TYPE_UNSUPPORTED("DHOLE-BIND-004"),
+
+    /**
+     * {@code rules()} of a {@code Validatable} type is missing or not in the supported shape.
+     */
+    VAL_SHAPE("DHOLE-VAL-001"),
+
+    /**
+     * A {@code field(...)} argument is not a method reference to an accessor of the validated type.
+     */
+    VAL_FIELD("DHOLE-VAL-002"),
+
+    /**
+     * A rule is incompatible with the type of its field.
+     */
+    VAL_RULE_TYPE("DHOLE-VAL-003"),
+
+    /**
+     * {@code nested()} or {@code eachNested()} is applied to a type that is not {@code Validatable}.
+     */
+    VAL_NESTED("DHOLE-VAL-004"),
+
+    /**
+     * A field is declared more than once in {@code rules()}.
+     */
+    VAL_DUPLICATE_FIELD("DHOLE-VAL-005");
 
     private final String code;
 

@@ -133,6 +133,25 @@ public final class MetadataProcessor extends AbstractProcessor {
             }
         }
         write(RouteIndexWriter.LOCATION, RouteIndexWriter.write(routes));
+
+        List<ValidationRecord> validations = new ArrayList<>();
+        if (trees != null) {
+            ValidationAnalyzer validationAnalyzer = new ValidationAnalyzer(processingEnv.getElementUtils(),
+                    processingEnv.getTypeUtils(), trees);
+            for (ComponentRecord record : records) {
+                if (record.supertypes().contains(ValidationAnalyzer.VALIDATABLE)) {
+                    validationAnalyzer.analyze(
+                            processingEnv.getElementUtils().getTypeElement(record.type().replace('$', '.')))
+                            .ifPresent(validations::add);
+                }
+            }
+            for (RouteAnalyzer.Problem problem : validationAnalyzer.problems()) {
+                failed = true;
+                trees.printMessage(javax.tools.Diagnostic.Kind.ERROR, problem.diagnostic().format(), problem.tree(),
+                        problem.unit());
+            }
+        }
+        write(ValidationRecord.LOCATION, ValidationRecord.write(validations));
     }
 
     private void write(String location, String index) {
