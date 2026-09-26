@@ -104,7 +104,7 @@ class CliTest {
         launched.stop();
         assertRefused(port);
         if (!WINDOWS) {
-            assertTrue(launched.output().contains("Application stopped."), launched.output());
+            assertTrue(launched.output().contains("Application stopped."), launched.diagnostics());
         }
 
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
@@ -377,12 +377,17 @@ class CliTest {
      */
     static final class Running {
 
+        private static final long READER_JOIN_MILLIS = 30_000;
+
         private final Process process;
         private final StringBuffer output = new StringBuffer();
+        private final Thread reader;
+        private boolean forced;
+        private long stopElapsedMillis = -1;
 
         Running(Process process) {
             this.process = process;
-            Thread reader = new Thread(() -> {
+            reader = new Thread(() -> {
                 try (InputStream input = process.getInputStream()) {
                     byte[] buffer = new byte[4096];
                     for (int read; (read = input.read(buffer)) > 0; ) {
@@ -410,12 +415,12 @@ class CliTest {
                 if (occurrences(output(), text) >= count) {
                     return;
                 }
-                if (!process.isAlive() && occurrences(output(), text) < count) {
-                    Thread.sleep(200);
+                if (!process.isAlive()) {
+                    reader.join(READER_JOIN_MILLIS);
                     if (occurrences(output(), text) >= count) {
                         return;
                     }
-                    fail("Process exited (" + process.exitValue() + ") before printing '" + text + "':\n" + output());
+                    fail("Process exited before printing '" + text + "': " + diagnostics());
                 }
                 Thread.sleep(100);
             }
@@ -432,29 +437,43 @@ class CliTest {
             if (!process.waitFor(TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
                 fail("Process did not exit:\n" + output());
             }
-            Thread.sleep(200);
+            reader.join(READER_JOIN_MILLIS);
             return process.exitValue();
         }
 
         /**
-         * Asks the process tree to stop (SIGTERM on Unix-like systems) and waits for it.
+         * Asks the process tree to stop (SIGTERM on Unix-like systems), waits for it to exit, then
+         * waits (bounded) for the output reader to drain the pipe to end-of-file.
          */
         void stop() throws InterruptedException {
+            long started = System.nanoTime();
             List<ProcessHandle> tree = process.descendants().toList();
             tree.forEach(ProcessHandle::destroy);
             process.destroy();
             if (!process.waitFor(60, TimeUnit.SECONDS)) {
                 kill();
+                process.waitFor(60, TimeUnit.SECONDS);
             }
             for (ProcessHandle child : tree) {
                 child.onExit().completeOnTimeout(child, 60, TimeUnit.SECONDS).join();
             }
-            Thread.sleep(300);
+            stopElapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            reader.join(READER_JOIN_MILLIS);
         }
 
         void kill() {
+            forced = true;
             process.descendants().forEach(ProcessHandle::destroyForcibly);
             process.destroyForcibly();
+        }
+
+        /**
+         * How the process ended and what it printed, for assertion messages.
+         */
+        String diagnostics() {
+            return "exitCode=" + (process.isAlive() ? "running" : Integer.toString(process.exitValue()))
+                    + " forced=" + forced + " stopElapsedMs=" + stopElapsedMillis + " readerAlive=" + reader.isAlive()
+                    + "\ncaptured output:\n" + output();
         }
 
         private static int occurrences(String text, String part) {
