@@ -13,13 +13,13 @@ v0.1
 ## Current Milestone
 
 ```text
-M2 — Configuration
+M3 — Component Model + Dependency Injection
 ```
 
 ## Current Slice
 
 ```text
-M2 complete (final slice: settings loading and validation)
+M3 complete locally (final slice: resource ownership and construction rollback)
 ```
 
 ## Status
@@ -28,7 +28,8 @@ M2 complete (final slice: settings loading and validation)
 M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
-M3 — Component Model + DI    NOT STARTED
+M3 — Component Model + DI    COMPLETE LOCALLY (GitHub Actions not yet run on the M3 commits)
+M4 — Metadata Compiler       NOT STARTED
 ```
 
 ---
@@ -74,7 +75,7 @@ hello-api     -> implementation(dhole-core)
 bookstore-api -> implementation(dhole-core)
 ```
 
-Code exists in dhole-core (M1 runtime), dhole-config (M2 configuration) and examples/hello-api (M1 demo).
+Code exists in dhole-core (M1), dhole-config (M2), dhole-di (M3) and examples/hello-api (M1 demo).
 
 ---
 
@@ -178,11 +179,76 @@ Amended completion criteria, verified:
     org.dhole.testapps.roadmap.config.Settings
 ```
 
+## M3 Progress
+
+### M3 — Component Model + Dependency Injection (standalone dhole-di)
+
+Status: COMPLETE LOCALLY
+
+```text
+Public API (dhole-di), the only types users see in M3:
+[x] org.dhole.di.DependencyException, CircularDependencyException, AmbiguousDependencyException
+
+Internal (org.dhole.internal.di, package-private). The container is internal API
+(CORE_ARCHITECTURE.md §19, DI.md §13) and bindings are declared publicly through settings
+(DI.md §7, §9), which needs config/DI integration that does not exist yet:
+[x] ComponentDefinition — type, kind (CONSTRUCTOR/FACTORY/INSTANCE), scope, origin, description,
+    dependencies, instantiator, ownership; the model M4 metadata can supply instead of reflection
+[x] ConstructorDefinitions — the only reflection: exactly one public constructor of a public,
+    concrete, top-level/static nested class; no heuristics, no setAccessible, private and
+    package-private constructors never used; parameterized dependencies rejected for now
+[x] ComponentRegistry — resolution rules: explicit binding > concrete class > single registered
+    implementation of an interface/abstract type; none = missing, several = ambiguous
+    (candidates sorted by name, never by registration order)
+[x] ContainerBuilder + Binding — component(type[, scope]), bind(T).to(Impl) / toInstance(x)
+    (not owned) / toOwnedInstance(x) (ownership transferred), provide(T[, scope], factory);
+    duplicate bindings are a Binding Conflict
+[x] DependencyGraph / DependencyNode / DependencyGraphBuilder — immutable validated DAG, built
+    before any instance; cycles, missing, ambiguous and unusable constructors fail with the
+    dependency path; dependencyOrder(); render() tree view (CLI format of COMPONENT_MODEL.md §53)
+[x] DependencyContainer — resolve(T), graph(T), registeredGraph(), close();
+    build() validates all registrations and creates registered singletons dependencies first
+[x] Factory / FactoryContext — factory bindings; factories are graph leaves, runtime cycle guard;
+    null or wrongly typed results fail; exceptions wrapped with cause
+
+Semantics:
+- Scopes: SINGLETON (default, COMPONENT_MODEL.md §27) once per container; PROTOTYPE on every
+  resolution. No static state; containers never share instances. REQUEST deferred to HTTP.
+- Thread safety: resolutions that create singletons or run factories hold a ReentrantLock
+  (no virtual-thread pinning); singletons are published only when their resolution succeeds;
+  prototype-only resolutions over existing singletons are lock-free.
+- Ownership: owned = AutoCloseable singletons the container created + toOwnedInstance. External
+  instances are never closed. Prototypes belong to their receiver.
+- close(): reverse creation order (dependents before dependencies), every resource attempted,
+  failures reported in one DependencyException with suppressed causes; idempotent.
+- Rollback: a failed startup or resolution closes every owned resource it created (prototypes
+  included) in reverse order, publishes nothing, rethrows the original failure with cleanup
+  failures as suppressed. This is container rollback, not ApplicationState.FAILED (dhole-di is
+  not connected to Dhole.run()).
+
+Roadmap §7 tests, verified: simple dependency, nested dependencies, singleton reuse, prototype
+recreation, circular dependency, ambiguous interface, explicit binding, factory binding,
+AutoCloseable cleanup, startup rollback.
+Completion criteria, verified: constructor injection works; no @Autowired/@Inject (no annotations
+in dhole-di); dependency graph is inspectable; cycles fail early (graph validation, container
+build); container cleanup works.
+```
+
 ---
 
 ## Tests
 
 ```text
+M3 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 65 tasks (56 executed), no warnings
+  dhole-di:     DependencyContainerTest 22, ComponentRegistryTest 18,
+                ResourceLifecycleTest 16, DependencyGraphTest 13             69 tests, PASSED
+  dhole-config: unchanged M2 suite                                          91 test cases, PASSED
+  dhole-core:   unchanged M1 suite                                          33 tests, PASSED
+  total                                                                    193 test cases, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+
 M2 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 62 tasks (53 executed), no warnings
@@ -292,6 +358,16 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 - Not implemented in M2 (spec items for later): envLong, envDuration, .env.local and
   .env.<environment> variants, custom typed settings binding (CONFIGURATION.md §12, needs
   M3/M4), `dhole config` CLI (M8). LoadedConfiguration.report() already renders the masked form.
+- dhole-di is standalone: not connected to Dhole.run(), no public binding API yet. Public
+  settings.bind/provide (DI.md §7, §9) needs config/DI integration via the module mechanism;
+  Settings/Environment are not injectable yet.
+- Not implemented in M3 (spec items for later): REQUEST scope and scope validation (HTTP),
+  Provider<T> lazy access (COMPONENT_MODEL.md §30, mainly for request scope), Optional<T> and
+  List<T> injection (§39, §40), generic bindings (§21), named bindings (§22), test overrides
+  replace() (§47, M11), Startable/Stoppable callbacks (§32), component origins other than
+  APPLICATION/FACTORY (§4), diagnostic codes (DHOLE-DI-xxx).
+- Package-private constructors are not injectable until generated factories (M4) can call them
+  from the same package.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -365,6 +441,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
+89f771e feat(di): add resource ownership and construction rollback   (local clean build only; GitHub Actions not yet run)
 ```
 
 ---
@@ -388,15 +465,16 @@ git status
 ## Next Recommended Action
 
 ```text
-M3 — Component Model + Dependency Injection
+1. Push main and confirm the GitHub Actions "build" workflow passes on the M3 commits.
+2. M4 — Metadata Compiler (NOT STARTED). Start only on explicit request.
 ```
 
-Read before M3:
+Read before M4:
 
 ```text
-docs/COMPONENT_MODEL.md
-docs/DI.md
-docs/IMPLEMENTATION_ROADMAP.md (section 7)
+docs/METADATA_COMPILER.md
+docs/COMPONENT_MODEL.md (sections 49-50, 63-65)
+docs/IMPLEMENTATION_ROADMAP.md (section 8)
 docs/DEVELOPMENT.md
 ```
 
