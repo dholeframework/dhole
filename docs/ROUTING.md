@@ -275,4 +275,5 @@ User create(CreateUser input) { ... }
 - Não existem overloads da mesma aridade ao lado de `get(String, Handler)`, pelo que não há ambiguidade com lambdas implícitas.
 - Rotas tipadas exigem path conhecido em build-time (literal ou constante, incluindo prefixos literais de groups) e referência `this::metodo` do controller; caso contrário é erro de build. Rotas dinâmicas usam a API de `Request` cru.
 - `RouteBuilder` sem `to(...)` é erro de startup.
+- Handlers tipados devolvem um valor: um método `void` não é compatível com `Handler0..3` (javac rejeita). Para "sem conteúdo" devolver `Response.noContent()` (ou `null`). Overloads `void` da mesma aridade reintroduziriam o aviso de overload potencialmente ambíguo e não são adicionados.
 - Os exemplos anteriores `routes.get("/users/{id}", this::find)` devem ler-se como `routes.get("/users/{id}").to(this::find)`.
