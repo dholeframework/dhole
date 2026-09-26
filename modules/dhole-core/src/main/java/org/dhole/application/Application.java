@@ -18,6 +18,13 @@ public interface Application {
     void stop();
 
     /**
+     * Returns the context owned by this application.
+     *
+     * @return the application context, never {@code null}
+     */
+    ApplicationContext context();
+
+    /**
      * Returns the current lifecycle state.
      *
      * @return the current state, never {@code null}

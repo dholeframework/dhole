@@ -1,6 +1,7 @@
 package org.dhole.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -9,14 +10,14 @@ class DefaultApplicationTest {
 
     @Test
     void newApplicationIsCreated() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
 
         assertEquals(ApplicationState.CREATED, application.state());
     }
 
     @Test
     void startMovesApplicationToRunning() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
 
         application.start();
 
@@ -25,7 +26,7 @@ class DefaultApplicationTest {
 
     @Test
     void stopAfterStartMovesApplicationToStopped() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
         application.start();
 
         application.stop();
@@ -35,7 +36,7 @@ class DefaultApplicationTest {
 
     @Test
     void applicationCannotStartTwice() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
         application.start();
 
         assertThrows(IllegalStateException.class, application::start);
@@ -44,7 +45,7 @@ class DefaultApplicationTest {
 
     @Test
     void applicationCannotStopTwice() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
         application.start();
         application.stop();
 
@@ -54,7 +55,7 @@ class DefaultApplicationTest {
 
     @Test
     void stopBeforeStartIsRejected() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
 
         assertThrows(IllegalStateException.class, application::stop);
         assertEquals(ApplicationState.CREATED, application.state());
@@ -62,11 +63,32 @@ class DefaultApplicationTest {
 
     @Test
     void startAfterStopIsRejected() {
-        DefaultApplication application = new DefaultApplication();
+        DefaultApplication application = newApplication();
         application.start();
         application.stop();
 
         assertThrows(IllegalStateException.class, application::start);
         assertEquals(ApplicationState.STOPPED, application.state());
+    }
+
+    @Test
+    void contextIsTheOneOwnedByTheApplicationInEveryState() {
+        ApplicationContext context = new DefaultApplicationContext();
+        DefaultApplication application = new DefaultApplication(context);
+
+        assertSame(context, application.context());
+        application.start();
+        assertSame(context, application.context());
+        application.stop();
+        assertSame(context, application.context());
+    }
+
+    @Test
+    void applicationRequiresAContext() {
+        assertThrows(NullPointerException.class, () -> new DefaultApplication(null));
+    }
+
+    private static DefaultApplication newApplication() {
+        return new DefaultApplication(new DefaultApplicationContext());
     }
 }

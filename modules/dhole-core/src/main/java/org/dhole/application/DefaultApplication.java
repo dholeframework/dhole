@@ -1,5 +1,6 @@
 package org.dhole.application;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -9,8 +10,13 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 final class DefaultApplication implements Application {
 
+    private final ApplicationContext context;
     private final AtomicReference<ApplicationState> state =
             new AtomicReference<>(ApplicationState.CREATED);
+
+    DefaultApplication(ApplicationContext context) {
+        this.context = Objects.requireNonNull(context, "context");
+    }
 
     @Override
     public void start() {
@@ -22,6 +28,11 @@ final class DefaultApplication implements Application {
     public void stop() {
         transition("stop", ApplicationState.RUNNING, ApplicationState.STOPPING);
         state.set(ApplicationState.STOPPED);
+    }
+
+    @Override
+    public ApplicationContext context() {
+        return context;
     }
 
     @Override
