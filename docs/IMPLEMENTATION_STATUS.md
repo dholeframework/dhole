@@ -19,7 +19,7 @@ M3 — Component Model + Dependency Injection
 ## Current Slice
 
 ```text
-M3 complete (final slice: resource ownership and construction rollback)
+M4 architecture decisions recorded; implementation starting
 ```
 
 ## Status
@@ -29,7 +29,7 @@ M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
-M4 — Metadata Compiler       NOT STARTED
+M4 — Metadata Compiler       IN PROGRESS
 ```
 
 ---
@@ -411,6 +411,22 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M4 — Metadata Compiler
+
+```text
+- javac integration: standard annotation processor (no annotations in user code), no class
+  loading, no bytecode parsing in v1; diagnostics through Messager; index written with Filer.
+- Metadata: versioned text index META-INF/dhole/components.idx ("dhole-metadata 1"), grammar in
+  METADATA_COMPILER.md §34.2; internal reader in dhole-di; no dhole-di -> dhole-compiler dependency.
+- Runtime reflection only to invoke the recorded constructor; no generated factories in v1
+  (package-private constructors stay unsupported, intentional v1 limitation).
+- Application root: -Adhole.application=<FQCN> (from dhole.toml [build] main); absent = library
+  compilation (no index); never inferred from Dhole.run calls.
+- Index every concrete class of the application root as a known provider; constructor problems
+  are data, not build errors. Build-time graph validation waits for structural roots (M5+).
+  (METADATA_COMPILER.md §34.1)
 ```
 
 ### Owner decisions for M2 — Configuration

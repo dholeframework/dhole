@@ -893,6 +893,75 @@ limited bytecode inspection when necessary
 
 Não construir um compiler frontend Java próprio.
 
+## 34.1 Decisões M4 (v1)
+
+Integração com `javac`:
+
+- annotation processor standard (`javax.annotation.processing`), sem annotations no código da aplicação;
+- observa tipos estruturalmente (`Element`, `TypeElement`, `TypeMirror`); não carrega classes da aplicação; sem bytecode parsing na v1;
+- não reivindica annotations (outros processors continuam a funcionar) e não depende da ordem de execução;
+- diagnostics via `Messager` (file/line preservados);
+- escreve o índice com `Filer` na última round.
+
+Application root:
+
+- opção do processor `-Adhole.application=<fully-qualified class>`, preenchida pelo build a partir de `dhole.toml` `[build] main`;
+- root package = package dessa classe; apenas esse package e subpackages entram no índice;
+- sem a opção: compilação de biblioteca, sem índice e sem erro;
+- não se infere o root a partir de chamadas `Dhole.run(...)`.
+
+Descoberta e validação:
+
+- o índice contém todas as classes concretas (classes e records) do application root presentes na compilação, como providers conhecidos;
+- problemas de constructor são registados como dados, não como erros de build (DTOs e utilitários não são componentes);
+- a validação de graph em build-time requer roots estruturais (Controller, M5+) e bindings conhecidos em build-time; no M4 não existem, pelo que DHOLE-DI-001/002/003 são reportados pelo runtime DI com a localização registada no índice.
+
+Runtime:
+
+- `dhole-di` contém um leitor interno do formato; `dhole-di` não depende de `dhole-compiler`;
+- reflection apenas para invocar o constructor já registado; sem análise estrutural em runtime para tipos indexados;
+- tipos fora do índice (bibliotecas) usam o fallback reflexivo controlado do M3, com semântica idêntica;
+- sem generated factories na v1: constructors package-private continuam não suportados (limitação intencional da v1, não regra permanente).
+
+## 34.2 Formato `META-INF/dhole/components.idx` v1
+
+UTF-8, linhas terminadas em `\n`, sem timestamps, paths absolutos ou valores de configuração.
+
+```text
+dhole-metadata 1
+
+component <binary-name>
+constructor [<type> ...]
+unusable <reason> [<argument> ...]
+supertype <binary-name>
+source <relative-path>:<line>
+```
+
+Regras:
+
+- primeira linha exatamente `dhole-metadata 1`; outra versão falha com erro de compatibilidade;
+- um bloco por componente, separado por linha vazia, ordenado por `<binary-name>`;
+- dentro do bloco, pela ordem: `component`, `constructor` (se existir exatamente um constructor público elegível), `unusable` (se o tipo não é utilizável), `supertype` (zero ou mais, ordenados), `source` (opcional);
+- `<type>` usa o formato de `Class.forName` (binary names, primitives como `int`, arrays como `[Ljava.lang.String;`);
+- `<reason>`: `not-public`, `not-static-nested`, `no-public-constructor`, `multiple-public-constructors <count>`, `parameterized-dependency <index>`;
+- `supertype` lista os supertypes transitivos (erasure), excluindo `java.lang.Object`;
+- `source` usa o path relativo ao package (`com/acme/shop/UserService.java`) e a linha do constructor (ou da classe);
+- linhas desconhecidas ou blocos inválidos falham como metadata malformada.
+
+Exemplo:
+
+```text
+dhole-metadata 1
+
+component com.acme.shop.UserRepository
+constructor
+source com/acme/shop/UserRepository.java:3
+
+component com.acme.shop.UserService
+constructor com.acme.shop.UserRepository
+source com/acme/shop/UserService.java:7
+```
+
 ---
 
 # 35. Incremental compilation
