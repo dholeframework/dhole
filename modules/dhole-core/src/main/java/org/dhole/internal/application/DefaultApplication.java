@@ -12,7 +12,7 @@ import org.dhole.internal.lifecycle.LifecycleManager;
  *
  * <p>Lifecycle behaviour is delegated to the application's {@link LifecycleManager}.
  */
-final class DefaultApplication implements Application {
+public final class DefaultApplication implements Application {
 
     private final ApplicationContext context;
     private final LifecycleManager lifecycle;

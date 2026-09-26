@@ -10,26 +10,26 @@ import org.dhole.internal.lifecycle.LifecycleManager;
  *
  * <p>Every {@link #build()} call creates a new, independent application.
  */
-final class ApplicationBuilder {
+public final class ApplicationBuilder {
 
     private PrintStream output = System.out;
 
     private ApplicationBuilder() {
     }
 
-    static ApplicationBuilder create() {
+    public static ApplicationBuilder create() {
         return new ApplicationBuilder();
     }
 
     /**
      * Sets where lifecycle progress is reported. Defaults to {@link System#out}.
      */
-    ApplicationBuilder output(PrintStream output) {
+    public ApplicationBuilder output(PrintStream output) {
         this.output = Objects.requireNonNull(output, "output");
         return this;
     }
 
-    DefaultApplication build() {
+    public DefaultApplication build() {
         return new DefaultApplication(new DefaultApplicationContext(), new LifecycleManager(output));
     }
 }
