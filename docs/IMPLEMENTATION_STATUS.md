@@ -19,7 +19,7 @@ M6 — Serialization + Parameter Binding
 ## Current Slice
 
 ```text
-M6 complete locally (final slice: typed user routes served with JSON)
+M6 complete (final slice: typed user routes served with JSON)
 ```
 
 ## Status
@@ -31,7 +31,7 @@ M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
-M6 — Serialization + Binding COMPLETE LOCALLY (GitHub Actions not yet run on the M6 commits)
+M6 — Serialization + Binding COMPLETE (local build + GitHub Actions on 0bec555)
 M7 — Validation + Errors     NOT STARTED
 ```
 
@@ -347,7 +347,7 @@ Roadmap §9, verified:
 
 ### M6 — Serialization + Parameter Binding
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 Public API:
@@ -723,7 +723,7 @@ ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Act
 0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
 e17a78e docs(status): finalize M4 build integration   (local clean build + GitHub Actions "build" run 36245781250, success)
 f539d9e fix(http): complete 405 and HEAD semantics   (local clean build + GitHub Actions "build" run 36247823999, success)
-8e34487 feat(example): serve typed user routes with JSON   (local clean build only; GitHub Actions not yet run)
+0bec555 docs(status): mark M6 complete locally   (local clean build + GitHub Actions "build" run 36263377814, success)
 ```
 
 ---
@@ -747,8 +747,7 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M6 commits.
-2. M7 — Validation + Error Handling (NOT STARTED). Start only on explicit request.
+M7 — Validation + Error Handling (NOT STARTED). Start only on explicit request.
 ```
 
 Read before M7:
