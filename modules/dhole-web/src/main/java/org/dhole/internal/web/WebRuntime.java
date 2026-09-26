@@ -1,7 +1,9 @@
 package org.dhole.internal.web;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.dhole.http.HttpServer;
@@ -9,8 +11,11 @@ import org.dhole.internal.di.ComponentMetadata;
 import org.dhole.internal.di.ContainerBuilder;
 import org.dhole.internal.di.DependencyContainer;
 import org.dhole.internal.http.JdkHttpServer;
+import org.dhole.internal.json.JacksonJsonSerializer;
+import org.dhole.internal.routing.Route;
 import org.dhole.internal.routing.RouteMatcher;
 import org.dhole.internal.routing.RouteRegistry;
+import org.dhole.serialization.SerializerRegistry;
 import org.dhole.web.Controller;
 
 /**
@@ -25,6 +30,8 @@ import org.dhole.web.Controller;
  *   <li>the reachable graph of every controller validated (DHOLE-DI-001..003 fail here);</li>
  *   <li>controllers created and their routes registered;</li>
  *   <li>route conflicts rejected;</li>
+ *   <li>a binding plan built for every typed route from {@code routes.idx}; missing, stale or
+ *       unusable metadata fails here ("rebuild the application");</li>
  *   <li>request pipeline assembled and the server started.</li>
  * </ol>
  * A startup failure closes what was already acquired and rethrows the original failure. Indexed
@@ -50,11 +57,21 @@ final class WebRuntime implements AutoCloseable {
      * @param port the port to bind, {@code 0} for an ephemeral port
      */
     static WebRuntime start(ClassLoader loader, String host, int port) {
-        return start(ComponentMetadata.load(loader), ContainerBuilder.create(), new JdkHttpServer(host, port));
+        return start(ComponentMetadata.load(loader), RouteMetadata.load(loader), ContainerBuilder.create(),
+                new JdkHttpServer(host, port));
     }
 
+    /**
+     * Starts without typed route metadata: only raw {@code Request} routes can be served.
+     */
     static WebRuntime start(ComponentMetadata metadata, ContainerBuilder components, HttpServer server) {
+        return start(metadata, RouteMetadata.empty(), components, server);
+    }
+
+    static WebRuntime start(ComponentMetadata metadata, RouteMetadata routeMetadata, ContainerBuilder components,
+            HttpServer server) {
         Objects.requireNonNull(metadata, "metadata");
+        Objects.requireNonNull(routeMetadata, "routeMetadata");
         Objects.requireNonNull(components, "components");
         Objects.requireNonNull(server, "server");
         List<Class<?>> controllers = metadata.providersOf(CONTROLLER).stream().map(metadata::loadClass).toList();
@@ -64,11 +81,21 @@ final class WebRuntime implements AutoCloseable {
                 container.graph(controller);
             }
             RouteRegistry registry = new RouteRegistry();
+            Map<String, ClassLoader> loaders = new HashMap<>();
             for (Class<?> controller : controllers) {
+                loaders.put(controller.getName(), controller.getClassLoader());
                 ((Controller) container.resolve(controller)).routes(registry.router(controller.getName()));
             }
             RouteMatcher routes = registry.build();
-            server.start(new RequestPipeline(routes, container));
+            SerializerRegistry serializers = SerializerRegistry.of(List.of(new JacksonJsonSerializer()));
+            ParameterBinder binder = new ParameterBinder(routeMetadata, serializers);
+            Map<Route, BindingPlan> plans = new HashMap<>();
+            for (Route route : routes.routes()) {
+                if (route.typed().isPresent()) {
+                    plans.put(route, binder.plan(route, loaders.get(route.controller())));
+                }
+            }
+            server.start(new RequestPipeline(routes, container, plans, serializers));
             return new WebRuntime(server, container, routes);
         } catch (RuntimeException | Error failure) {
             try {

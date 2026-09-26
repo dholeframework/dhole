@@ -145,7 +145,10 @@ class WebRuntimeTest {
         assertEquals(201, created.statusCode());
         assertEquals(Optional.of("7"), created.headers().firstValue("X-Resource"));
         assertEquals(204, send("GET", "/nothing").statusCode());
-        assertEquals(500, send("GET", "/unmapped").statusCode());
+        HttpResponse<String> list = send("GET", "/unmapped");
+        assertEquals(200, list.statusCode());
+        assertEquals("[\"json\",\"is\",\"M6\"]", list.body());
+        assertEquals(Optional.of("application/json"), list.headers().firstValue("Content-Type"));
         HttpResponse<String> failure = send("GET", "/failure");
         assertEquals(500, failure.statusCode());
         assertEquals("Internal Server Error", failure.body());
