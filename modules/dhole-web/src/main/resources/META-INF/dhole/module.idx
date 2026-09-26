@@ -1,0 +1,5 @@
+dhole-module 1
+
+module web
+activator org.dhole.internal.web.WebActivator
+requires config di http json routing serialization validation
