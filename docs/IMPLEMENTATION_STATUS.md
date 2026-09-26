@@ -19,14 +19,14 @@ M1 — Core Runtime
 ## Current Slice
 
 ```text
-M1 complete locally (final slice: shutdown handling)
+M1 complete (final slice: shutdown handling)
 ```
 
 ## Status
 
 ```text
 M0 — Repository Foundation   COMPLETE
-M1 — Core Runtime            COMPLETE LOCALLY (remote CI not yet run on the M1 commits)
+M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           NOT STARTED
 ```
 
@@ -95,7 +95,7 @@ None.
 
 ### M1 — Core Runtime
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 Public API:
@@ -275,7 +275,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 
 ```text
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
-ed51e89 feat(core): add shutdown handling (local clean build only; GitHub Actions not yet run)
+ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 ```
 
 ---
@@ -299,8 +299,7 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M1 commits.
-2. M2 — Configuration (NOT STARTED). Start only on explicit request.
+M2 — Configuration
 ```
 
 Read before M2:
