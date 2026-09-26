@@ -19,14 +19,14 @@ M1 — Core Runtime
 ## Current Slice
 
 ```text
-Slice 2 — Application interface (complete)
+Slice 3 — DefaultApplication lifecycle (complete)
 ```
 
 ## Status
 
 ```text
 M0 — Repository Foundation   COMPLETE
-M1 — Core Runtime            IN PROGRESS (Slices 1–2 of M1 complete)
+M1 — Core Runtime            IN PROGRESS (Slices 1–3 of M1 complete)
 ```
 
 ---
@@ -100,7 +100,10 @@ Status: IN PROGRESS
 [ ] Dhole
 [x] Application — org.dhole.application.Application: start(), stop(), state() (Slice 2)
     context() deferred until ApplicationContext exists (Slice 4); see Known Issues
-[ ] DefaultApplication
+[x] DefaultApplication — package-private final; basic transitions (Slice 3):
+    CREATED -> STARTING -> RUNNING on start(), RUNNING -> STOPPING -> STOPPED on stop();
+    other calls throw IllegalStateException; transitions claimed atomically (AtomicReference CAS)
+    FAILED transition deferred until a fallible startup/shutdown operation exists; see Known Issues
 [x] ApplicationState — org.dhole.application.ApplicationState + ApplicationStateTest (Slice 1)
 [ ] ApplicationContext
 [ ] DefaultApplicationContext
@@ -114,6 +117,16 @@ Status: IN PROGRESS
 ## Tests
 
 ```text
+M1 Slice 3 (JDK 21.0.12, Windows 11):
+./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, no compiler warnings
+  org.dhole.application.DefaultApplicationTest          7 tests, PASSED
+  org.dhole.application.ApplicationStateTest            1 test, PASSED
+  org.dhole.BuildInfrastructureSmokeTest                1 test, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+./gradlew build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 37 tasks (2 executed)
+
 M1 Slice 2 (JDK 21.0.12, Windows 11):
 ./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL
@@ -155,6 +168,11 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 ```text
 - Application does not yet declare context() from CORE_ARCHITECTURE.md §6; it is added
   together with ApplicationContext (Slice 4) instead of introducing a placeholder type now.
+- DefaultApplication never enters FAILED yet: no fallible startup/shutdown operation exists.
+  The FAILED transition, rollback and "startup failure -> FAILED" / "shutdown after partial
+  startup" tests are deferred to the slice that introduces the first fallible operation.
+- DefaultApplication.stop() is only valid from RUNNING. Shutdown-hook behaviour for other
+  states (CORE_ARCHITECTURE.md §41) is not decided yet and belongs to the shutdown handling slice.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -205,7 +223,7 @@ git status
 
 ```text
 M1 — Core Runtime
-Slice 3 — DefaultApplication lifecycle
+Slice 4 — ApplicationContext
 ```
 
 Read before M1:
