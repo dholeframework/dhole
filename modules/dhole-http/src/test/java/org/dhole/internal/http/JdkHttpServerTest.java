@@ -59,6 +59,27 @@ class JdkHttpServerTest {
     }
 
     @Test
+    void queryParametersAreFormDecodedAndMalformedQueriesAreBadRequests() throws Exception {
+        AtomicReference<Request> received = new AtomicReference<>();
+        server.start(request -> {
+            received.set(request);
+            return Response.ok();
+        });
+
+        get("/search?term=java+web&tag=a&tag=b&empty=&flag&name=Ol%C3%A1");
+
+        assertEquals("java web", received.get().queryParameter("term"));
+        assertEquals("a", received.get().queryParameter("tag"));
+        assertEquals("", received.get().queryParameter("empty"));
+        assertEquals("", received.get().queryParameter("flag"));
+        assertEquals("Olá", received.get().queryParameter("name"));
+        assertEquals(null, received.get().queryParameter("missing"));
+        // Clients such as the JDK HttpClient refuse to send a malformed escape; the adapter answers
+        // 400 because parsing fails before the handler runs.
+        assertThrows(IllegalArgumentException.class, () -> JdkHttpServer.parseQuery("term=%G1"));
+    }
+
+    @Test
     void everyStandardMethodReachesTheHandler() throws Exception {
         server.start(request -> Response.ok(request.method().name()));
 

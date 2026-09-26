@@ -5,7 +5,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -108,7 +113,13 @@ public final class JdkHttpServer implements HttpServer {
             return text(HttpStatus.CONTENT_TOO_LARGE);
         }
         String path = exchange.getRequestURI().getRawPath();
-        Request request = new ReceivedRequest(method, path == null || path.isEmpty() ? "/" : path,
+        Map<String, List<String>> query;
+        try {
+            query = parseQuery(exchange.getRequestURI().getRawQuery());
+        } catch (IllegalArgumentException e) {
+            return text(HttpStatus.BAD_REQUEST);
+        }
+        Request request = new ReceivedRequest(method, path == null || path.isEmpty() ? "/" : path, query,
                 Headers.of(exchange.getRequestHeaders()), body,
                 exchange.getRemoteAddress().getAddress().getHostAddress());
         try {
@@ -116,6 +127,29 @@ public final class JdkHttpServer implements HttpServer {
         } catch (Exception e) {
             return text(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Parses a raw query string, form-decoding names and values; repeated names keep their order.
+     *
+     * @throws IllegalArgumentException if the encoding is malformed
+     */
+    static Map<String, List<String>> parseQuery(String raw) {
+        Map<String, List<String>> query = new LinkedHashMap<>();
+        if (raw == null || raw.isEmpty()) {
+            return query;
+        }
+        for (String pair : raw.split("&")) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            int separator = pair.indexOf('=');
+            String name = URLDecoder.decode(separator < 0 ? pair : pair.substring(0, separator), StandardCharsets.UTF_8);
+            String value = separator < 0 ? "" : URLDecoder.decode(pair.substring(separator + 1), StandardCharsets.UTF_8);
+            query.computeIfAbsent(name, key -> new ArrayList<>()).add(value);
+        }
+        query.replaceAll((name, values) -> List.copyOf(values));
+        return query;
     }
 
     /**

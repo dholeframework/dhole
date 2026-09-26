@@ -38,6 +38,11 @@ final class RoutedRequest implements Request {
     }
 
     @Override
+    public String queryParameter(String name) {
+        return received.queryParameter(name);
+    }
+
+    @Override
     public Headers headers() {
         return received.headers();
     }

@@ -18,6 +18,12 @@ public interface Request {
      */
     String header(String name);
 
+    /**
+     * Returns the first value of a query parameter, form-decoded (so {@code +} is a space), or
+     * {@code null} when absent. {@code ?flag} has an empty value.
+     */
+    String queryParameter(String name);
+
     Headers headers();
 
     /**
