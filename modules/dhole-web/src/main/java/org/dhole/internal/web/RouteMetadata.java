@@ -22,10 +22,12 @@ import org.dhole.routing.RoutingException;
  * (METADATA_COMPILER.md §34.3). Written by the metadata compiler; this reader has no dependency on
  * it. Strict: an unknown version fails with a compatibility error, any malformed line with its
  * line number. Types are kept as text and resolved when a binding plan is built.
+ *
+ * <p>Public only for Dhole tooling ({@code dhole routes}); not application API.
  */
-final class RouteMetadata {
+public final class RouteMetadata {
 
-    static final String LOCATION = "META-INF/dhole/routes.idx";
+    public static final String LOCATION = "META-INF/dhole/routes.idx";
     static final int VERSION = 1;
 
     private static final Pattern HEADER = Pattern.compile("dhole-routes (\\S+)");
@@ -71,7 +73,7 @@ final class RouteMetadata {
         }
     }
 
-    static RouteMetadata parse(String text) {
+    public static RouteMetadata parse(String text) {
         String[] lines = text.split("\n", -1);
         Matcher header = HEADER.matcher(lines[0]);
         if (!header.matches()) {
@@ -124,6 +126,13 @@ final class RouteMetadata {
     }
 
     /**
+     * Returns every typed route in index order (controller, path, method).
+     */
+    public List<Entry> routes() {
+        return List.copyOf(routes.values());
+    }
+
+    /**
      * Returns the metadata of a typed route by its stable identity.
      */
     Optional<Entry> route(String controller, HttpMethod method, String path) {
@@ -150,10 +159,10 @@ final class RouteMetadata {
                 + "\n\nRebuild the application.");
     }
 
-    record Entry(String controller, HttpMethod method, String path, String handler, List<Parameter> parameters,
+    public record Entry(String controller, HttpMethod method, String path, String handler, List<Parameter> parameters,
             String response, Optional<String> source) {
     }
 
-    record Parameter(String name, ParameterSource source, String type) {
+    public record Parameter(String name, ParameterSource source, String type) {
     }
 }

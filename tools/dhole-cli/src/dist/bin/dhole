@@ -1,0 +1,26 @@
+#!/bin/sh
+# Dhole command line. Requires a JDK 21 or newer (JAVA_HOME or java on PATH).
+
+# Resolve symbolic links so the installation is found from a linked command.
+SCRIPT="$0"
+while [ -h "$SCRIPT" ]; do
+    LINK=$(readlink "$SCRIPT")
+    case "$LINK" in
+        /*) SCRIPT="$LINK" ;;
+        *) SCRIPT="$(dirname "$SCRIPT")/$LINK" ;;
+    esac
+done
+DHOLE_HOME=$(cd "$(dirname "$SCRIPT")/.." && pwd -P) || exit 1
+
+if [ -n "$JAVA_HOME" ]; then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    JAVA=$(command -v java)
+fi
+if [ -z "$JAVA" ] || [ ! -x "$JAVA" ]; then
+    echo "Dhole requires a JDK 21 or newer, but Java was not found." >&2
+    echo "Install a JDK and set JAVA_HOME, or add java to PATH." >&2
+    exit 1
+fi
+
+exec "$JAVA" $DHOLE_OPTS "-Ddhole.home=$DHOLE_HOME" -cp "$DHOLE_HOME/lib/*" org.dhole.internal.cli.JavaCheck "$@"

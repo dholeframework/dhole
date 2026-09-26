@@ -6,6 +6,9 @@ plugins {
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
+group = "org.dhole"
+version = "0.1.0"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
