@@ -19,7 +19,7 @@ M3 — Component Model + Dependency Injection
 ## Current Slice
 
 ```text
-M3 complete locally (final slice: resource ownership and construction rollback)
+M3 complete (final slice: resource ownership and construction rollback)
 ```
 
 ## Status
@@ -28,7 +28,7 @@ M3 complete locally (final slice: resource ownership and construction rollback)
 M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
-M3 — Component Model + DI    COMPLETE LOCALLY (GitHub Actions not yet run on the M3 commits)
+M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
 M4 — Metadata Compiler       NOT STARTED
 ```
 
@@ -183,7 +183,7 @@ Amended completion criteria, verified:
 
 ### M3 — Component Model + Dependency Injection (standalone dhole-di)
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 Public API (dhole-di), the only types users see in M3:
@@ -441,7 +441,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
-89f771e feat(di): add resource ownership and construction rollback   (local clean build only; GitHub Actions not yet run)
+0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
 ```
 
 ---
@@ -465,8 +465,7 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M3 commits.
-2. M4 — Metadata Compiler (NOT STARTED). Start only on explicit request.
+M4 — Metadata Compiler
 ```
 
 Read before M4:
