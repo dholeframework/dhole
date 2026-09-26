@@ -13,19 +13,20 @@ v0.1
 ## Current Milestone
 
 ```text
-M0 — Repository Foundation
+M1 — Core Runtime
 ```
 
 ## Current Slice
 
 ```text
-M0 complete — no slice in progress
+Slice 1 — ApplicationState (complete)
 ```
 
 ## Status
 
 ```text
-COMPLETE
+M0 — Repository Foundation   COMPLETE
+M1 — Core Runtime            IN PROGRESS (Slice 1 of M1 complete)
 ```
 
 ---
@@ -89,17 +90,17 @@ None.
 
 ---
 
-## Not Started
+## M1 Progress
 
 ### M1 — Core Runtime
 
-Status: NOT STARTED
+Status: IN PROGRESS
 
 ```text
 [ ] Dhole
 [ ] Application
 [ ] DefaultApplication
-[ ] ApplicationState
+[x] ApplicationState — org.dhole.application.ApplicationState + ApplicationStateTest (Slice 1)
 [ ] ApplicationContext
 [ ] DefaultApplicationContext
 [ ] Bootstrap
@@ -107,13 +108,22 @@ Status: NOT STARTED
 [ ] shutdown handling
 ```
 
-M0 acceptance criteria are satisfied; M1 may start with Slice 1.
-
 ---
 
 ## Tests
 
 ```text
+M1 Slice 1 (JDK 21.0.12, Windows 11):
+./gradlew :dhole-core:check -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL
+  org.dhole.application.ApplicationStateTest            1 test, PASSED
+  org.dhole.BuildInfrastructureSmokeTest                1 test, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+./gradlew build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+  in the working copy                                   FAILED in :build-logic:compileKotlin — a concurrent VS Code
+                                                        Gradle build was rewriting build-logic/build (not a code error)
+  in an isolated clone with the Slice 1 files            BUILD SUCCESSFUL, 37 tasks executed, no warnings
+
 M0 verification summary:
   Local Gradle build                                    PASSED
   Smoke test (org.dhole.BuildInfrastructureSmokeTest)   PASSED
@@ -139,6 +149,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
 - On this development machine, builds fail from host memory exhaustion while the VS Code Java
   extension (language servers + its own Gradle daemons) is running; close it before building.
+- While VS Code is open, its Gradle build can race with command-line builds on build-logic/build
+  (stale or missing Kotlin DSL accessors). Close VS Code, then run ./gradlew -p build-logic clean.
 ```
 
 ---
@@ -182,7 +194,7 @@ git status
 
 ```text
 M1 — Core Runtime
-Slice 1 — ApplicationState (org.dhole.application.ApplicationState in modules/dhole-core)
+Slice 2 — Application interface
 ```
 
 Read before M1:
