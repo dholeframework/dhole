@@ -13,13 +13,15 @@ v0.1
 ## Current Milestone
 
 ```text
-M7 — Validation + Error Handling
+M7 — Validation + Error Handling COMPLETE LOCALLY
+M8 — CLI + Build + Dev Mode NOT STARTED
 ```
 
 ## Current Slice
 
 ```text
-M7 architecture decisions recorded; implementation starting
+M7 complete locally (validation.idx, validation engine, error envelopes, request IDs, 422);
+not yet pushed; CI pending
 ```
 
 ## Status
@@ -32,7 +34,7 @@ M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
 M6 — Serialization + Binding COMPLETE (local build + GitHub Actions on 0bec555)
-M7 — Validation + Errors     IN PROGRESS
+M7 — Validation + Errors     COMPLETE LOCALLY (CI pending)
 M8 — CLI + Build + Dev Mode  NOT STARTED
 ```
 
@@ -393,11 +395,67 @@ Roadmap §10, verified:
     GET /users/42 and POST /users served over HTTP (UsersApiTest)
 ```
 
+## M7 Progress
+
+### M7 — Validation + Error Handling
+
+Status: COMPLETE LOCALLY (CI pending)
+
+```text
+Public API:
+[x] dhole-validation org.dhole.validation: Validatable, Rules<T> / FieldRules<T,V> (required,
+    notBlank, minLength, maxLength, email, min, max, positive, notEmpty, rule, nested, eachNested,
+    check), Rule<T>, Validation, ValidationResult, ValidationError, Validator
+[x] dhole-web org.dhole.web: AppException (code, HttpStatus, safe message), Errors (notFound,
+    badRequest, unauthorized, forbidden, conflict), ErrorResponse (envelope; details/fields omitted
+    when empty), ErrorHandler<E>
+[x] dhole-http: HttpStatus CONFLICT (409), UNPROCESSABLE_CONTENT (422); Response.conflict
+
+Internal:
+[x] dhole-compiler ValidationAnalyzer — javac Trees analysis of public static Rules<T> rules() of
+    Validatable types; META-INF/dhole/validation.idx ("dhole-validation 1"), fields in declaration
+    order; DHOLE-VAL-001..005 at the exact source line; no SerializedLambda anywhere
+[x] dhole-validation ValidationMetadata (strict reader), ValidationRegistry (rules() + metadata
+    names, count check, "Rebuild the application"), DefaultValidator
+[x] dhole-web ErrorHandlerRegistry (nearest registered superclass wins; no public registration),
+    RequestPipeline request ID + error boundary, RuntimeMode DEVELOPMENT/PRODUCTION (internal
+    WebRuntime.Options), ParameterBinder validates Validatable bodies; Validator injectable
+
+HTTP behaviour:
+- Every pipeline response has X-Request-Id (generated UUID; client value ignored); every error
+  envelope carries the same requestId. Error bodies are application/json.
+- 400 INVALID_PARAMETER (details parameter/source/expected) / BAD_REQUEST (body); 404 NOT_FOUND;
+  405 METHOD_NOT_ALLOWED + Allow; 406 NOT_ACCEPTABLE; 415 UNSUPPORTED_MEDIA_TYPE;
+  422 VALIDATION_ERROR with fields; AppException -> its status/code; other -> 500 INTERNAL_ERROR.
+- 500: production generic message; development adds only details {exception, message}; the stack
+  trace goes to stderr with the request ID, never to the body.
+
+Roadmap §11, verified:
+[x] valid input, multiple invalid fields, nested validation, custom rule (ValidatorTest)
+[x] binding error != validation error, not found, unexpected error in development and production,
+    request ID propagation (ErrorHandlingTest over real HTTP)
+[x] User create(CreateUser input) with JSON + binding + validation + controller + serialization +
+    errors in hello-api (UsersApiTest: 200, 422 with fields, 404 envelope, 400 binding)
+```
+
 ---
 
 ## Tests
 
 ```text
+M7 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 90 tasks (81 executed), no warnings
+  dhole-validation: ValidatorTest                                              9 tests, PASSED
+  dhole-compiler: ValidationAnalyzerTest 11 + RouteAnalyzerTest 9 + M4 suite 23  43 tests, PASSED
+  dhole-web:      ErrorHandlingTest 13, ErrorResponseTest 3, TypedRoutesTest 12,
+                  WebRuntimeTest 19, RouteMetadataTest 6, ConversionServiceTest 3,
+                  BindingWrappersTest 2                                        58 tests, PASSED
+  hello-api:      HelloApiTest 2, UsersApiTest 7 (real HTTP)                    9 tests, PASSED
+  other modules                                                               unchanged, PASSED
+  total                                                                      400 test cases, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+
 M6 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 87 tasks (78 executed), no warnings
@@ -588,9 +646,9 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   the web stack until the module/runtime composition mechanism exists (CORE_ARCHITECTURE.md, M5).
 - Handlers cannot reach request-scoped components through public API yet (Provider<T> access,
   COMPONENT_MODEL.md §30, and parameter binding in M6); the pipeline opens and closes the scope.
-- Not implemented in M5 (later): OPTIONS, Router head/options/resource/named routes, request IDs,
+- Not implemented in M5 (later): OPTIONS, Router head/options/resource/named routes,
   global middleware registration, configurable host/port/body limits and timeouts
-  (settings.http), 406 content negotiation, JSON (M6), error handler registry (M7).
+  (settings.http).
 - DI types needed by the web runtime (ContainerBuilder, DependencyContainer, RequestScope,
   ComponentMetadata, ComponentScope, Factory, FactoryContext, DependencyGraph) are public inside
   org.dhole.internal.di: internal, no compatibility guarantee (CORE_ARCHITECTURE.md §52).
@@ -598,7 +656,15 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   Response.noContent() or null (ROUTING.md §15).
 - Typed routes are analyzed only inside routes() with constant paths; typed routes registered from
   helper methods have no metadata and fail at startup with "Rebuild the application".
-- M6 error bodies are plain text; the structured error format (PARAMETER_BINDING.md §25) is M7.
+- Error handler registration has no public API (owner decision, ERRORS.md §12); the runtime mode is
+  an internal WebRuntime option until Environment integration exists.
+- Missing JSON record properties are a 400 binding failure (SERIALIZATION.md §11); required() in
+  HTTP therefore reports explicit nulls. Nested Validatable types are compiled on first use, not
+  prepared at startup; only body root types are prepared.
+- Protocol rejections made by the server adapter before the pipeline (413, 501, malformed query)
+  keep plain-text bodies and no request ID (ERRORS.md §12).
+- Not implemented in M7 (later): localized messages, rule groups, async/database rules, validation
+  of path/query/header values, RateLimitError, structured logging (M12).
 - Not implemented in M6 (later): Cookie/Auth/FilePart/RequestContext sources, List<T> query values,
   custom converters and serializers registration, text/plain and octet-stream request bodies,
   build-time serialization metadata (SERIALIZATION.md §19), missing-vs-null for PATCH beyond records.
@@ -761,17 +827,18 @@ git status
 ## Next Recommended Action
 
 ```text
-M7 — Validation + Error Handling (NOT STARTED). Start only on explicit request.
+M8 — CLI + Build + Dev Mode (NOT STARTED). M7 is pushed together with M8 and then verified in CI.
 ```
 
-Read before M7:
+Read before M8:
 
 ```text
-docs/VALIDATION.md
-docs/ERRORS.md
-docs/PARAMETER_BINDING.md (§24, §25)
-docs/IMPLEMENTATION_ROADMAP.md (section 11)
-docs/DEVELOPMENT.md
+docs/CLI.md
+docs/BUILD_SYSTEM.md
+docs/DEV_MODE.md, docs/HOT_RELOAD.md
+docs/CONFIGURATION.md, docs/METADATA_COMPILER.md, docs/MODULE_SYSTEM.md
+docs/PROJECT_STRUCTURE.md, docs/REPOSITORY_STRUCTURE.md, docs/TESTING.md
+docs/IMPLEMENTATION_ROADMAP.md (section 12)
 ```
 
 ---
