@@ -14,11 +14,6 @@ import org.dhole.config.Environment;
  */
 final class DefaultEnvironment implements Environment {
 
-    enum Source {
-        PROCESS,
-        DOT_ENV
-    }
-
     private final String name;
     private final Map<String, String> process;
     private final Map<String, String> dotEnv;
@@ -38,19 +33,19 @@ final class DefaultEnvironment implements Environment {
     public Optional<String> get(String key) {
         Objects.requireNonNull(key, "key");
         return source(key)
-                .map(source -> source == Source.PROCESS ? process.get(key) : dotEnv.get(key))
+                .map(source -> source == ValueSource.PROCESS ? process.get(key) : dotEnv.get(key))
                 .filter(value -> !value.isEmpty());
     }
 
     /**
      * Returns where a variable is defined, if anywhere.
      */
-    Optional<Source> source(String key) {
+    Optional<ValueSource> source(String key) {
         if (process.containsKey(key)) {
-            return Optional.of(Source.PROCESS);
+            return Optional.of(ValueSource.PROCESS);
         }
         if (dotEnv.containsKey(key)) {
-            return Optional.of(Source.DOT_ENV);
+            return Optional.of(ValueSource.DOT_ENV);
         }
         return Optional.empty();
     }
