@@ -274,16 +274,30 @@ application starts
 application changes state correctly
 application cannot start twice
 application stops
+shutdown hook is safe in every state reachable in M1
+```
+
+## Testes condicionais
+
+Obrigatórios apenas quando existir uma operação de startup realmente falível:
+
+```text
 startup failure -> FAILED
 shutdown after partial startup
 ```
+
+O M1 não contém nenhuma operação de startup falível nem mecanismo público para registar trabalho de startup.
+
+Não se introduz uma fonte de falha sintética apenas para exercitar `FAILED`.
+
+Estes testes tornam-se obrigatórios no primeiro milestone que introduzir uma operação de startup realmente falível (não necessariamente o M4).
 
 ## Critério de conclusão
 
 ```text
 ✓ Dhole.run() works
 ✓ lifecycle works
-✓ shutdown works
+✓ shutdown works (shutdown hook safe)
 ✓ no HTTP/database/config yet
 ✓ core has no dependency on optional modules
 ```

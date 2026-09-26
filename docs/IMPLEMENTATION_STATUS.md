@@ -26,7 +26,7 @@ Slice 4 — ApplicationContext (complete)
 
 ```text
 M0 — Repository Foundation   COMPLETE
-M1 — Core Runtime            IN PROGRESS — BLOCKED (Slices 1–4 complete; see BLOCKER)
+M1 — Core Runtime            IN PROGRESS (Slices 1–4 complete; startup failure blocker resolved)
 ```
 
 ---
@@ -178,7 +178,7 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   each is added when its type exists.
 - DefaultApplication never enters FAILED yet: no fallible startup/shutdown operation exists.
   The FAILED transition, rollback and "startup failure -> FAILED" / "shutdown after partial
-  startup" tests are deferred to the slice that introduces the first fallible operation.
+  startup" tests are deferred to the first milestone with a real fallible startup operation.
 - DefaultApplication.stop() is only valid from RUNNING. Shutdown-hook behaviour for other
   states (CORE_ARCHITECTURE.md §41) is not decided yet and belongs to the shutdown handling slice.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
@@ -201,33 +201,29 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 
 These decisions must not be guessed silently.
 
-### BLOCKER — M1 startup failure mechanism (open, awaiting owner decision)
+### RESOLVED — M1 startup failure mechanism
 
 ```text
-M1 requires real startup-failure behaviour and tests ("startup failure -> FAILED",
-"shutdown after partial startup"), but the specification does not define a public M1
-mechanism for registering fallible startup work:
-  - StartupTask registration is defined only through metadata discovery
-    (METADATA_COMPILER.md §10), which belongs to M4;
-  - CORE_ARCHITECTURE.md §64 still lists the startup task API as an open decision;
-  - Dhole.run(App.class) offers no way to register fallible work in M1.
-M1 implementation is stopped at 2d3f6fa (Slice 4) until an architecture decision is made.
-M1 acceptance criteria are unchanged. No StartupTask API has been added.
+Blocker (recorded in 9c7d037): M1 required "startup failure -> FAILED" and "shutdown after
+partial startup", but M1 has no fallible startup operation and no public way to register one.
+Resolved by owner decision (docs(architecture): defer startup failure integration):
+  - FAILED stays in the lifecycle model; it is reached only when a real operation fails;
+  - no synthetic failure source is introduced;
+  - the two tests become mandatory in the first milestone with a real fallible startup
+    operation (IMPLEMENTATION_ROADMAP.md §5 "Testes condicionais");
+  - public StartupTask registration stays deferred (CORE_ARCHITECTURE.md §40, §64);
+    metadata discovery stays planned for M4 (METADATA_COMPILER.md §10).
 ```
 
-### Owner decisions already recorded for the remaining M1 work
+### Owner decisions for the remaining M1 work
 
 ```text
-- Bootstrap machinery is internal: Bootstrap, BootstrapContext, ApplicationBuilder,
-  DefaultApplication, DefaultApplicationContext and LifecycleManager move to
-  org.dhole.internal.* (CORE_ARCHITECTURE.md §52, §59). Public API stays Dhole,
-  Application, ApplicationContext, ApplicationState, and org.dhole.lifecycle types only
-  where the specification requires them. Internal types must not appear in public signatures.
-- If StartupTask is the M1 fallible operation: the §40 contract is used unchanged, tasks run in
-  registration order, a throwing task stops startup, sets FAILED and is surfaced through the
-  lifecycle exception with the original cause; stop/shutdown after a failed partial startup is
-  safe and raises no further lifecycle failure; no module rollback is claimed in M1.
-  This applies only once a registration mechanism is decided (see BLOCKER).
+- Bootstrap machinery is internal: ApplicationBuilder, DefaultApplication,
+  DefaultApplicationContext, Bootstrap and LifecycleManager live under org.dhole.internal.*
+  (CORE_ARCHITECTURE.md §52, §59). Public API stays Dhole, Application, ApplicationContext,
+  ApplicationState. Internal types must not appear in public signatures. Types from the
+  roadmap sketch are created only when they have a current M1 responsibility.
+- No public StartupTask API or registration mechanism in M1.
 ```
 
 ---
@@ -260,8 +256,8 @@ git status
 
 ```text
 M1 — Core Runtime
-BLOCKED — wait for the owner's decision on the M1 startup failure mechanism
-(see "BLOCKER" above). Do not continue M1 implementation and do not start M2 until then.
+Internalize implementation types, then bootstrap, lifecycle orchestration,
+Dhole entry point and shutdown hook.
 ```
 
 Read before M1:

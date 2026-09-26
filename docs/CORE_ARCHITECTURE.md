@@ -193,6 +193,14 @@ FAILED
 
 Transições inválidas devem ser impedidas.
 
+`FAILED` é um estado válido do lifecycle.
+
+A transição para `FAILED` ocorre apenas quando uma operação real de startup/lifecycle falha.
+
+Não se introduz nenhuma fonte de falha sintética apenas para exercitar `FAILED`.
+
+Enquanto o runtime não contiver uma operação de startup falível (caso do M1), `FAILED` permanece no modelo sem ser alcançável.
+
 ---
 
 # 7. `ApplicationBuilder`
@@ -1100,6 +1108,10 @@ public class Warmup implements StartupTask {
 
 Falha pode impedir readiness dependendo da policy.
 
+O registo público de startup tasks permanece por decidir (ver secção 64).
+
+Não existe mecanismo público de registo no M1: a API pública de `StartupTask` só é introduzida com um modelo genuíno de registo/descoberta (a descoberta via metadata está planeada para o metadata compiler).
+
 ---
 
 # 41. Shutdown hook
@@ -1205,6 +1217,10 @@ A aplicação termina como:
 ```text
 FAILED
 ```
+
+Este comportamento é integrado no primeiro milestone que introduzir uma operação de startup realmente falível.
+
+Rollback de recursos que ainda não existem não é simulado.
 
 ---
 
@@ -1696,13 +1712,15 @@ A Core Architecture ainda precisa de documentos detalhados para:
 - scopes final;
 - HTTP server adapter;
 - request parameter binding;
-- startup task API;
+- startup task API (incluindo o registo público; adiado até existir um modelo genuíno de registo/descoberta);
 - application event system;
 - concurrency model;
 - observability;
 - generated code strategy.
 
 Estas decisões não impedem a arquitetura v0.1.
+
+Decisão resolvida (M1): a integração de falhas de startup (`FAILED`, rollback após startup parcial) é adiada até ao primeiro milestone com uma operação de startup realmente falível. Ver secções 6, 40 e 44.
 
 ---
 
