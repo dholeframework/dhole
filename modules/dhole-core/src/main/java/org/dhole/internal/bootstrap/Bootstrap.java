@@ -3,8 +3,8 @@ package org.dhole.internal.bootstrap;
 import java.io.PrintStream;
 import java.util.Objects;
 
-import org.dhole.application.Application;
 import org.dhole.internal.application.ApplicationBuilder;
+import org.dhole.internal.application.DefaultApplication;
 
 /**
  * Prepares an application from its application class.
@@ -33,7 +33,7 @@ public final class Bootstrap {
     /**
      * Assembles a new application in state {@code CREATED}.
      */
-    public Application build() {
+    public DefaultApplication build() {
         output.println("Dhole");
         output.println();
         return ApplicationBuilder.create().output(output).build();

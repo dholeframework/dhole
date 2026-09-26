@@ -32,6 +32,13 @@ public final class DefaultApplication implements Application {
         lifecycle.stop();
     }
 
+    /**
+     * Stops the application on JVM shutdown if it is running; otherwise does nothing.
+     */
+    public void shutdown() {
+        lifecycle.stopIfRunning();
+    }
+
     @Override
     public ApplicationContext context() {
         return context;

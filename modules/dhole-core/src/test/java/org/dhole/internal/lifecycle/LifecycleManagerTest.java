@@ -65,6 +65,39 @@ class LifecycleManagerTest {
     }
 
     @Test
+    void stopIfRunningStopsARunningApplication() {
+        lifecycle.start();
+
+        lifecycle.stopIfRunning();
+
+        assertEquals(ApplicationState.STOPPED, lifecycle.state());
+        assertEquals(
+                List.of("Application starting...", "Application ready.", "Application stopped."),
+                outputLines());
+    }
+
+    @Test
+    void stopIfRunningDoesNothingBeforeStart() {
+        lifecycle.stopIfRunning();
+
+        assertEquals(ApplicationState.CREATED, lifecycle.state());
+        assertEquals(List.of(), outputLines());
+    }
+
+    @Test
+    void stopIfRunningDoesNothingAfterStop() {
+        lifecycle.start();
+        lifecycle.stop();
+
+        lifecycle.stopIfRunning();
+
+        assertEquals(ApplicationState.STOPPED, lifecycle.state());
+        assertEquals(
+                List.of("Application starting...", "Application ready.", "Application stopped."),
+                outputLines());
+    }
+
+    @Test
     void lifecycleRequiresAnOutput() {
         assertThrows(NullPointerException.class, () -> new LifecycleManager(null));
     }

@@ -78,6 +78,29 @@ class DefaultApplicationTest {
     }
 
     @Test
+    void shutdownStopsARunningApplication() {
+        DefaultApplication application = newApplication();
+        application.start();
+
+        application.shutdown();
+
+        assertEquals(ApplicationState.STOPPED, application.state());
+    }
+
+    @Test
+    void shutdownIsSafeInEveryOtherReachableState() {
+        DefaultApplication application = newApplication();
+
+        application.shutdown();
+        assertEquals(ApplicationState.CREATED, application.state());
+
+        application.start();
+        application.stop();
+        application.shutdown();
+        assertEquals(ApplicationState.STOPPED, application.state());
+    }
+
+    @Test
     void contextIsTheOneOwnedByTheApplicationInEveryState() {
         ApplicationContext context = new DefaultApplicationContext();
         DefaultApplication application = new DefaultApplication(context, newLifecycle());

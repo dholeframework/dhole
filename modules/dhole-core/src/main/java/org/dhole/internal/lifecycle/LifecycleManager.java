@@ -40,12 +40,28 @@ public final class LifecycleManager {
      */
     public void stop() {
         transition("stop", ApplicationState.RUNNING, ApplicationState.STOPPING);
-        state.set(ApplicationState.STOPPED);
-        output.println("Application stopped.");
+        completeStop();
+    }
+
+    /**
+     * Stops the application if it is {@code RUNNING}; does nothing in any other state.
+     *
+     * <p>Used on JVM shutdown, where the application may never have started or may already be
+     * stopped, and neither case is an error.
+     */
+    public void stopIfRunning() {
+        if (state.compareAndSet(ApplicationState.RUNNING, ApplicationState.STOPPING)) {
+            completeStop();
+        }
     }
 
     public ApplicationState state() {
         return state.get();
+    }
+
+    private void completeStop() {
+        state.set(ApplicationState.STOPPED);
+        output.println("Application stopped.");
     }
 
     private void transition(String operation, ApplicationState expected, ApplicationState next) {
