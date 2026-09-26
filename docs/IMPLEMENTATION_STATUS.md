@@ -19,7 +19,7 @@ M2 — Configuration
 ## Current Slice
 
 ```text
-M2 architecture decisions recorded; implementation starting
+M2 complete locally (final slice: settings loading and validation)
 ```
 
 ## Status
@@ -27,7 +27,8 @@ M2 architecture decisions recorded; implementation starting
 ```text
 M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
-M2 — Configuration           IN PROGRESS
+M2 — Configuration           COMPLETE LOCALLY (GitHub Actions not yet run on the M2 commits)
+M3 — Component Model + DI    NOT STARTED
 ```
 
 ---
@@ -73,7 +74,7 @@ hello-api     -> implementation(dhole-core)
 bookstore-api -> implementation(dhole-core)
 ```
 
-Only dhole-core (M1 runtime) and examples/hello-api (M1 demo application) contain code.
+Code exists in dhole-core (M1 runtime), dhole-config (M2 configuration) and examples/hello-api (M1 demo).
 
 ---
 
@@ -130,11 +131,67 @@ Amended roadmap §5 acceptance, verified against code/tests:
     (no real fallible startup operation in M1); no artificial failure source introduced
 ```
 
+## M2 Progress
+
+### M2 — Configuration (standalone dhole-config)
+
+Status: COMPLETE LOCALLY
+
+```text
+Public API (dhole-config):
+[x] org.dhole.config.Environment — name(), isDevelopment(), isTest(), isProduction(), get(key)
+[x] org.dhole.config.ConfigurationException — messages never contain secret values
+[x] org.dhole.config.SettingsBuilder — environment(), app(Consumer<AppSettingsBuilder>)
+[x] org.dhole.config.AppSettingsBuilder — name(String), port(int)
+[x] org.dhole.config.AppSettings — record (name, port)
+[x] org.dhole.config.SettingsRegistry — app()
+[x] org.dhole.env.Env — env(name), env(name, default), envInt(name, default), envBool(name, default)
+
+Internal (org.dhole.internal.config):
+[x] DotEnvParser — KEY=VALUE, comments, blank lines, literal quotes; rejects malformed lines,
+    invalid names, unterminated quotes, duplicates (errors show line and key, never the value)
+[x] EnvironmentLoader / DefaultEnvironment — precedence process > .env; APP_ENV resolution;
+    production skips .env entirely
+[x] EnvResolver — Env backend bound per thread during Settings.configure (ThreadLocal, always
+    removed); strict int/boolean conversion; required/default; production secret-default rule;
+    records every resolved value and its source (PROCESS, DOT_ENV, DEFAULT)
+[x] SecretNames — minimal isolated convention: name is SECRET/PASSWORD/KEY or ends with
+    _SECRET/_PASSWORD/_KEY; display mask ********
+[x] SettingsLookup — exactly <app package>.config.Settings, public static void configure(SettingsBuilder)
+[x] DefaultSettingsBuilder — defaults (name = application class simple name, port 8080);
+    validation: app.name not blank, app.port 0..65535; all problems reported together
+[x] ConfigurationLoader / LoadedConfiguration — load + validate; masked report ("NAME    value")
+
+Precedence implemented: process environment > .env (development/test only) > Settings defaults.
+
+Roadmap §6 tests, verified:
+[x] .env load / environment override / default value / required value missing
+[x] invalid integer / invalid boolean / secret masking / production restrictions basic
+Amended completion criteria, verified:
+[x] typed configuration loaded and validated; precedence works; missing and malformed values
+    fail loading; secrets masked; production restrictions enforced; dhole-config tested
+    standalone; dhole-core independent of dhole-config (verifyCoreIsolation, no project deps)
+[-] startup integration (validation before RUNNING, failure -> FAILED, safe shutdown):
+    deferred until the module/activation mechanism exists; FAILED not activated by M2
+[-] examples/hello-api unchanged: without runtime integration a Settings.java there would not
+    be loaded; the roadmap's first Settings.java is exercised as test fixture
+    org.dhole.testapps.roadmap.config.Settings
+```
+
 ---
 
 ## Tests
 
 ```text
+M2 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 62 tasks (53 executed), no warnings
+  dhole-config: ConfigurationLoaderTest 27, EnvTest 22, EnvironmentLoaderTest 21,
+                SecretNamesTest 12, DotEnvParserTest 9                     91 test cases, PASSED
+  dhole-core:   unchanged M1 suite                                          33 tests, PASSED
+  total                                                                    124 test cases, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+
 M1 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 59 tasks (50 executed), no warnings
@@ -224,6 +281,17 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   logging belongs to observability (M12).
 - DholeTest.runBootstrapsAndStartsTheApplication registers a real shutdown hook in the test
   JVM; it stops that application when the test JVM exits (output goes to a discarded stream).
+- dhole-config is not connected to Dhole.run(); configuration FAILED integration waits for the
+  module/activation mechanism (IMPLEMENTATION_ROADMAP.md §6 "Integração no startup").
+- Secret classification is a name convention (SecretNames); replace with explicit secret
+  metadata when the settings model gains it (for example security.jwt.secret in M10).
+- An empty variable value counts as absent: required values fail, defaults apply. A process
+  variable defined as empty is still not replaced by .env.
+- Default application name (no Settings or no app.name) is the application class's simple name;
+  the specification defines no framework default. Default port 8080 follows the spec examples.
+- Not implemented in M2 (spec items for later): envLong, envDuration, .env.local and
+  .env.<environment> variants, custom typed settings binding (CONFIGURATION.md §12, needs
+  M3/M4), `dhole config` CLI (M8). LoadedConfiguration.report() already renders the masked form.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -296,6 +364,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 ```text
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
+fd3b11f feat(config): add settings loading and validation   (local clean build only; GitHub Actions not yet run)
 ```
 
 ---
@@ -319,15 +388,16 @@ git status
 ## Next Recommended Action
 
 ```text
-M2 — Configuration
+1. Push main and confirm the GitHub Actions "build" workflow passes on the M2 commits.
+2. M3 — Component Model + Dependency Injection (NOT STARTED). Start only on explicit request.
 ```
 
-Read before M2:
+Read before M3:
 
 ```text
-docs/CONFIGURATION.md
-docs/IMPLEMENTATION_ROADMAP.md (section 6)
-docs/CORE_ARCHITECTURE.md (sections 10, 11)
+docs/COMPONENT_MODEL.md
+docs/DI.md
+docs/IMPLEMENTATION_ROADMAP.md (section 7)
 docs/DEVELOPMENT.md
 ```
 
