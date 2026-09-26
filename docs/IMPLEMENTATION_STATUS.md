@@ -13,7 +13,7 @@ v0.1
 ## Current Milestone
 
 ```text
-M3 — Component Model + Dependency Injection
+M4 — Metadata Compiler
 ```
 
 ## Current Slice
