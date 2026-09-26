@@ -19,7 +19,7 @@ M2 — Configuration
 ## Current Slice
 
 ```text
-M2 complete locally (final slice: settings loading and validation)
+M2 complete (final slice: settings loading and validation)
 ```
 
 ## Status
@@ -27,7 +27,7 @@ M2 complete locally (final slice: settings loading and validation)
 ```text
 M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
-M2 — Configuration           COMPLETE LOCALLY (GitHub Actions not yet run on the M2 commits)
+M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    NOT STARTED
 ```
 
@@ -135,7 +135,7 @@ Amended roadmap §5 acceptance, verified against code/tests:
 
 ### M2 — Configuration (standalone dhole-config)
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 Public API (dhole-config):
@@ -364,7 +364,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 ```text
 24fe83e chore: rename project to Dhole   (local build + GitHub Actions CI)
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
-fd3b11f feat(config): add settings loading and validation   (local clean build only; GitHub Actions not yet run)
+7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
 ```
 
 ---
@@ -388,8 +388,7 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M2 commits.
-2. M3 — Component Model + Dependency Injection (NOT STARTED). Start only on explicit request.
+M3 — Component Model + Dependency Injection
 ```
 
 Read before M3:
