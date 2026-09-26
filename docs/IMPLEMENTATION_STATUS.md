@@ -19,7 +19,7 @@ M4 — Metadata Compiler
 ## Current Slice
 
 ```text
-M4 complete locally (final slice: repository build integration)
+M4 complete (final slice: repository build integration)
 ```
 
 ## Status
@@ -29,7 +29,7 @@ M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
-M4 — Metadata Compiler       COMPLETE LOCALLY (GitHub Actions not yet run on the M4 commits)
+M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
 M5 — HTTP + Routing          NOT STARTED
 ```
 
@@ -239,7 +239,7 @@ build); container cleanup works.
 
 ### M4 — Metadata Compiler
 
-Status: COMPLETE LOCALLY
+Status: COMPLETE
 
 ```text
 tools/dhole-compiler (org.dhole.internal.compiler; only the processor class is public, as javac
@@ -535,7 +535,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
 0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
-bd8ac50 docs(architecture): reserve metadata diagnostic prefix and defer build-time graph validation   (local clean build only; GitHub Actions not yet run)
+e17a78e docs(status): finalize M4 build integration   (local clean build + GitHub Actions "build" run 36245781250, success)
 ```
 
 ---
@@ -559,8 +559,7 @@ git status
 ## Next Recommended Action
 
 ```text
-1. Push main and confirm the GitHub Actions "build" workflow passes on the M4 commits.
-2. M5 — HTTP + Routing (NOT STARTED). Start only on explicit request.
+M5 — HTTP + Routing
 ```
 
 Read before M5:
