@@ -242,6 +242,66 @@ class RoutingTest {
         });
     }
 
+    // Typed routes
+
+    @Test
+    void typedRoutesKeepTheirFunctionAndArityAndCoexistWithRawHandlers() throws Exception {
+        routes.get("/hello", request -> "raw");
+        routes.get("/users/{id}").to(this::find);
+        routes.post("/users").to((String input) -> "created " + input);
+        routes.put("/users/{id}").to(this::update);
+        routes.delete("/all").to(() -> "gone");
+        routes.patch("/users/{id}/{field}").to((Long id, String field, String value) -> id + field + value);
+        RouteMatcher matcher = registry.build();
+
+        assertEquals("raw", found(matcher, HttpMethod.GET, "/hello").route().handler().handle(null));
+        assertTrue(found(matcher, HttpMethod.GET, "/hello").route().typed().isEmpty());
+        TypedHandler find = found(matcher, HttpMethod.GET, "/users/7").route().typed().orElseThrow();
+        assertEquals(1, find.arity());
+        assertEquals("user 7", find.invoke(7L));
+        assertEquals("created x", found(matcher, HttpMethod.POST, "/users").route().typed().orElseThrow().invoke("x"));
+        assertEquals("7 name", found(matcher, HttpMethod.PUT, "/users/7").route().typed().orElseThrow().invoke(7L, "name"));
+        assertEquals("gone", found(matcher, HttpMethod.DELETE, "/all").route().typed().orElseThrow().invoke());
+        assertEquals(3, found(matcher, HttpMethod.PATCH, "/users/1/a").route().typed().orElseThrow().arity());
+        assertThrows(IllegalArgumentException.class, () -> find.invoke());
+    }
+
+    @Test
+    void typedRouteWithoutHandlerFailsAtBuild() {
+        routes.get("/pending");
+
+        RoutingException failure = assertThrows(RoutingException.class, registry::build);
+
+        assertEquals("Routing Error\n\nRoute GET /pending declared by TestController has no handler.\n\n"
+                + "Complete it with .to(...).", failure.getMessage());
+    }
+
+    @Test
+    void typedRouteAcceptsOneHandlerAndConflictsLikeRawRoutes() {
+        var builder = routes.get("/users/{id}");
+        builder.to(this::find);
+        assertThrows(RoutingException.class, () -> builder.to(this::find));
+        routes.get("/users/{userId}", request -> "raw");
+
+        assertThrows(RoutingException.class, registry::build);
+    }
+
+    @Test
+    void routesRecordTheirControllerIdentity() {
+        RouteDefinition route = registry.router("com.acme.web.UsersController$Admin").get("/x", HANDLER);
+
+        assertEquals("com.acme.web.UsersController$Admin", ((Route) route).controller());
+        assertEquals("Admin", ((Route) route).declaredBy());
+    }
+
+    private String find(long id) {
+        return "user " + id;
+    }
+
+    private String update(long id, String name) {
+        return id + " " + name;
+    }
+
     private static RouteMatch.Found found(RouteMatcher matcher, HttpMethod method, String path) {
         return assertInstanceOf(RouteMatch.Found.class, matcher.match(method, path));
     }

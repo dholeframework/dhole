@@ -65,7 +65,7 @@ final class WebRuntime implements AutoCloseable {
             }
             RouteRegistry registry = new RouteRegistry();
             for (Class<?> controller : controllers) {
-                ((Controller) container.resolve(controller)).routes(registry.router(controller.getSimpleName()));
+                ((Controller) container.resolve(controller)).routes(registry.router(controller.getName()));
             }
             RouteMatcher routes = registry.build();
             server.start(new RequestPipeline(routes, container));

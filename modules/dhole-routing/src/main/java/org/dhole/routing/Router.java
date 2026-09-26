@@ -12,6 +12,10 @@ import java.util.function.Consumer;
  * }
  * }</pre>
  *
+ * The two-argument form registers a raw {@link Handler} that receives the {@link org.dhole.http.Request};
+ * the one-argument form returns a {@link RouteBuilder} for a typed handler whose parameters are bound
+ * from the request.
+ *
  * Paths start with {@code /}; {@code {name}} marks a path parameter occupying a whole segment.
  * Registration happens once, at startup.
  */
@@ -26,6 +30,19 @@ public interface Router {
     RouteDefinition patch(String path, Handler handler);
 
     RouteDefinition delete(String path, Handler handler);
+
+    /**
+     * Starts a typed GET route: {@code routes.get("/users/{id}").to(this::find)}.
+     */
+    RouteBuilder get(String path);
+
+    RouteBuilder post(String path);
+
+    RouteBuilder put(String path);
+
+    RouteBuilder patch(String path);
+
+    RouteBuilder delete(String path);
 
     /**
      * Registers routes under a path prefix. {@code group("/users", users -> users.get("/", h))}
