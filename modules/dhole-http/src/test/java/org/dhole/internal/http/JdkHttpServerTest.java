@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.dhole.http.HttpHandler;
+import org.dhole.http.HttpMethod;
 import org.dhole.http.HttpStatus;
 import org.dhole.http.Request;
 import org.dhole.http.Response;
@@ -66,6 +67,25 @@ class JdkHttpServerTest {
                     .method(method, BodyPublishers.noBody()).build(), BodyHandlers.ofString());
             assertEquals(method, response.body());
         }
+    }
+
+    @Test
+    void headSendsStatusAndHeadersWithoutBodyBytes() throws Exception {
+        AtomicReference<Request> received = new AtomicReference<>();
+        server.start(request -> {
+            received.set(request);
+            return Response.ok("hello").header("X-Trace", "1");
+        });
+
+        HttpResponse<byte[]> response = client.send(HttpRequest.newBuilder(uri("/"))
+                .method("HEAD", BodyPublishers.noBody()).build(), BodyHandlers.ofByteArray());
+
+        assertEquals(HttpMethod.HEAD, received.get().method());
+        assertEquals(200, response.statusCode());
+        assertEquals(0, response.body().length);
+        assertEquals(Optional.of("5"), response.headers().firstValue("Content-Length"));
+        assertEquals(Optional.of("text/plain; charset=UTF-8"), response.headers().firstValue("Content-Type"));
+        assertEquals(Optional.of("1"), response.headers().firstValue("X-Trace"));
     }
 
     @Test

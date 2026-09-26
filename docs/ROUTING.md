@@ -250,7 +250,8 @@ Regras de routing do M5:
 - groups compõem prefixos sem barras duplicadas; `group("/users", users -> users.get("/", ...))` regista `/users`; groups podem ser aninhados (secção 5);
 - sem normalização de barra final no request: `/hello/` não corresponde a `/hello`;
 - segmentos literais têm precedência sobre parâmetros na mesma posição; o matching é determinístico e não depende da ordem de registo;
-- path inexistente → `404`; path existente com método não registado → `405`; route matching ocorre antes do middleware;
+- path inexistente → `404`; path existente com método não registado → `405` com header `Allow` (métodos registados, ordem de `HttpMethod`); route matching ocorre antes do middleware;
+- `HEAD` corresponde à rota `GET` do path (sem body na resposta); não há registo de rotas `HEAD`;
 - rotas com o mesmo método e a mesma forma (nomes de parâmetros ignorados) são conflito antes do servidor aceitar tráfego;
 - `use(middleware)` aplica-se às rotas do group (e groups aninhados) e deve ser declarado antes das rotas desse group; a ordem é: group exterior primeiro, depois ordem de `use`;
 - valores de path parameters são entregues em bruto (strings, percent-decoded); conversão de tipos é M6.

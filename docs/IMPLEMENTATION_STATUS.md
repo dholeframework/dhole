@@ -319,7 +319,10 @@ Internal:
 Semantics:
 - Matching: no trailing-slash normalization; literal beats parameter at the first differing
   position; deterministic, independent of registration order; malformed templates rejected.
-- 404 for an unknown path, 405 for a known path with another method (no Allow header yet).
+- 404 for an unknown path, 405 for a known path with another method, with Allow listing the
+  registered methods in HttpMethod declaration order (registration order irrelevant).
+- HEAD uses the GET route of the path: same status and headers (Content-Length included), no body
+  bytes; without a GET route normal 405/404 applies. No Router.head(...). OPTIONS not implemented.
 - Conflicts: same method + same shape (parameter names ignored) fail before the server starts,
   naming the declaring controllers.
 - Middleware: route/group level, declared before routes, outermost first; can end the pipeline.
@@ -347,15 +350,16 @@ Roadmap §9, verified:
 M5 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 81 tasks (72 executed), no warnings
-  dhole-http:     HttpPrimitivesTest 4, JdkHttpServerTest 9                   13 tests, PASSED
-  dhole-routing:  RoutingTest                                                 18 tests, PASSED
-  dhole-web:      WebRuntimeTest (real HTTP, ephemeral ports)                  17 tests, PASSED
+  dhole-http:     HttpPrimitivesTest 4, JdkHttpServerTest 10                  14 tests, PASSED
+  dhole-routing:  RoutingTest                                                 19 tests, PASSED
+  dhole-web:      WebRuntimeTest (real HTTP, ephemeral ports)                  19 tests, PASSED
   hello-api:      HelloApiTest (GET /hello -> 200 Hello World)                  2 tests, PASSED
   dhole-di:       M3/M4 suite 88 + RequestScopeTest 10                         98 tests, PASSED
   dhole-compiler: unchanged M4 suite                                          23 tests, PASSED
   dhole-config:   unchanged M2 suite                                          91 test cases, PASSED
   dhole-core:     unchanged M1 suite                                          33 tests, PASSED
-  total                                                                      295 test cases, PASSED
+  total                                                                      299 test cases, PASSED
+  (includes the 405 Allow and HEAD corrections made before pushing M5)
   :dhole-core:verifyCoreIsolation                       PASSED
 
 M4 final (JDK 21.0.12, Windows 11, no VS Code running):
@@ -518,8 +522,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   the web stack until the module/runtime composition mechanism exists (CORE_ARCHITECTURE.md, M5).
 - Handlers cannot reach request-scoped components through public API yet (Provider<T> access,
   COMPONENT_MODEL.md §30, and parameter binding in M6); the pipeline opens and closes the scope.
-- Not implemented in M5 (later): Router head/options/resource/named routes, request IDs, global
-  middleware registration, Allow header on 405, configurable host/port/body limits and timeouts
+- Not implemented in M5 (later): OPTIONS, Router head/options/resource/named routes, request IDs,
+  global middleware registration, configurable host/port/body limits and timeouts
   (settings.http), 406 content negotiation, JSON (M6), error handler registry (M7).
 - DI types needed by the web runtime (ContainerBuilder, DependencyContainer, RequestScope,
   ComponentMetadata, ComponentScope, Factory, FactoryContext, DependencyGraph) are public inside

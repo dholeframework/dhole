@@ -307,5 +307,6 @@ PARAMETER_BINDING.md
 - O servidor possui o executor que cria; `stop()` liberta servidor e executor.
 - `Request.header(name)` devolve o primeiro valor ou `null` quando ausente (secção 3).
 - Mapeamento de retorno no M5 (sem serialization): `Response` tal como está; `String` → `200 text/plain; charset=UTF-8`; `null` → `204`; outros tipos falham com `500` até ao M6.
-- `405 Method Not Allowed` não inclui ainda header `Allow`.
+- `405 Method Not Allowed` inclui `Allow` com os métodos registados explicitamente para o path, na ordem de declaração de `HttpMethod` (GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS), independente da ordem de registo; exemplo: `GET` e `PUT` em `/users/{id}` → `Allow: GET, PUT`.
+- `HEAD` (M5): usa a rota `GET` do path, com o mesmo status e headers (incluindo `Content-Length`), sem bytes de body; sem rota `GET`, aplica-se o routing normal (`405` com `Allow` ou `404`). Não existe `Router.head(...)`. `OPTIONS` continua por implementar.
 - O body do request é lido com limite interno de 1 MiB (`413` acima disso) até existir configuração de limites.

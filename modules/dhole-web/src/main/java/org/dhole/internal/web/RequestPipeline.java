@@ -18,7 +18,7 @@ import org.dhole.routing.Middleware;
  * The M5 request pipeline: route matching, request scope, middleware, handler and response mapping.
  *
  * <pre>
- * route match   -> 404 (no route for the path) / 405 (path known, method not)
+ * route match   -> 404 (no route for the path) / 405 with Allow (path known, method not); HEAD uses GET
  * request scope -> opened per request, always closed (success or failure)
  * middleware    -> outermost first; may end the pipeline early
  * handler       -> result mapped: Response as is, String as text/plain, null as 204
@@ -45,8 +45,9 @@ final class RequestPipeline implements HttpHandler {
         if (match instanceof RouteMatch.NotFound) {
             return text(HttpStatus.NOT_FOUND);
         }
-        if (match instanceof RouteMatch.MethodNotAllowed) {
-            return text(HttpStatus.METHOD_NOT_ALLOWED);
+        if (match instanceof RouteMatch.MethodNotAllowed notAllowed) {
+            return text(HttpStatus.METHOD_NOT_ALLOWED).header("Allow",
+                    String.join(", ", notAllowed.allowed().stream().map(Enum::name).toList()));
         }
         RouteMatch.Found found = (RouteMatch.Found) match;
         RequestScope scope = container.openRequestScope();

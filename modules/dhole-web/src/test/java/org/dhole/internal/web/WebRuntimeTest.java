@@ -95,6 +95,33 @@ class WebRuntimeTest {
     }
 
     @Test
+    void methodNotAllowedListsTheRegisteredMethodsInAFixedOrder() throws Exception {
+        start(controller("UsersController"));
+
+        HttpResponse<String> response = send("POST", "/users/123");
+
+        assertEquals(405, response.statusCode());
+        assertEquals(Optional.of("GET, PUT"), response.headers().firstValue("Allow"));
+        assertEquals(Optional.empty(), send("GET", "/missing").headers().firstValue("Allow"));
+    }
+
+    @Test
+    void headUsesTheGetRouteWithoutBody() throws Exception {
+        start(controller("HelloController"), controller("ResultsController"));
+
+        HttpResponse<String> head = send("HEAD", "/hello");
+        assertEquals(200, head.statusCode());
+        assertEquals("", head.body());
+        assertEquals(Optional.of("11"), head.headers().firstValue("Content-Length"));
+        assertEquals(Optional.of("text/plain; charset=UTF-8"), head.headers().firstValue("Content-Type"));
+
+        HttpResponse<String> noGet = send("HEAD", "/created");
+        assertEquals(405, noGet.statusCode());
+        assertEquals(Optional.of("POST"), noGet.headers().firstValue("Allow"));
+        assertEquals(404, send("HEAD", "/missing").statusCode());
+    }
+
+    @Test
     void rawRouteParametersReachTheHandler() throws Exception {
         start(controller("ItemsController"));
 
@@ -321,6 +348,15 @@ class WebRuntimeTest {
             routes.patch("/items", request -> "PATCH items");
             routes.delete("/items", request -> "DELETE items");
             routes.get("/items/{id}", request -> "item " + request.pathParameter("id"));
+        }
+    }
+
+    public static final class UsersController extends Controller {
+
+        @Override
+        public void routes(Router routes) {
+            routes.put("/users/{id}", request -> "updated");
+            routes.get("/users/{id}", request -> "user");
         }
     }
 

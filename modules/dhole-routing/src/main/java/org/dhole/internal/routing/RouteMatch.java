@@ -1,7 +1,7 @@
 package org.dhole.internal.routing;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.dhole.http.HttpMethod;
 
@@ -17,6 +17,9 @@ public sealed interface RouteMatch {
     record NotFound() implements RouteMatch {
     }
 
-    record MethodNotAllowed(Set<HttpMethod> allowed) implements RouteMatch {
+    /**
+     * @param allowed the methods registered for the path, in {@link HttpMethod} declaration order
+     */
+    record MethodNotAllowed(List<HttpMethod> allowed) implements RouteMatch {
     }
 }

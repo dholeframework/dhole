@@ -90,7 +90,7 @@ public final class JdkHttpServer implements HttpServer {
 
     private static void exchange(HttpExchange exchange, HttpHandler handler) {
         try (exchange) {
-            write(exchange, respond(exchange, handler));
+            write(exchange, respond(exchange, handler), "HEAD".equals(exchange.getRequestMethod()));
         } catch (IOException e) {
             // The client went away while the response was written; nothing is left to report to it.
         }
@@ -126,7 +126,11 @@ public final class JdkHttpServer implements HttpServer {
         return body.length > MAX_BODY_BYTES ? null : body;
     }
 
-    private static void write(HttpExchange exchange, Response response) throws IOException {
+    /**
+     * Writes the response. For {@code HEAD}, sends the same status and headers, including the
+     * {@code Content-Length} of the body, but no body bytes.
+     */
+    private static void write(HttpExchange exchange, Response response, boolean head) throws IOException {
         byte[] body;
         Response written = response;
         if (response.body() == null) {
@@ -146,6 +150,13 @@ public final class JdkHttpServer implements HttpServer {
             exchange.getResponseHeaders().put(name, written.headers().all(name));
         }
         boolean empty = body.length == 0;
+        if (head) {
+            if (!empty) {
+                exchange.getResponseHeaders().set("Content-Length", Integer.toString(body.length));
+            }
+            exchange.sendResponseHeaders(written.status().code(), -1);
+            return;
+        }
         exchange.sendResponseHeaders(written.status().code(), empty ? -1 : body.length);
         if (!empty) {
             try (OutputStream output = exchange.getResponseBody()) {

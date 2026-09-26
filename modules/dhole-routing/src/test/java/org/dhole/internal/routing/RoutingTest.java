@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.dhole.http.HttpMethod;
 import org.dhole.routing.Handler;
@@ -73,12 +72,29 @@ class RoutingTest {
 
     @Test
     void knownPathWithUnregisteredMethodIsMethodNotAllowed() {
-        routes.get("/items/{id}", HANDLER);
         routes.delete("/items/{id}", HANDLER);
+        routes.put("/items/{id}", HANDLER);
+        routes.get("/items/{id}", HANDLER);
 
         RouteMatch match = registry.build().match(HttpMethod.POST, "/items/7");
 
-        assertEquals(new RouteMatch.MethodNotAllowed(Set.of(HttpMethod.GET, HttpMethod.DELETE)), match);
+        // Allowed methods follow HttpMethod declaration order, not registration order.
+        assertEquals(new RouteMatch.MethodNotAllowed(List.of(HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE)), match);
+    }
+
+    @Test
+    void headUsesTheGetRouteOfThePath() {
+        Handler get = request -> "get";
+        routes.get("/users/{id}", get);
+        routes.post("/orders", HANDLER);
+        RouteMatcher matcher = registry.build();
+
+        RouteMatch.Found found = found(matcher, HttpMethod.HEAD, "/users/7");
+        assertEquals(get, found.route().handler());
+        assertEquals(HttpMethod.GET, found.route().method());
+        assertEquals(Map.of("id", "7"), found.parameters());
+        assertEquals(new RouteMatch.MethodNotAllowed(List.of(HttpMethod.POST)), matcher.match(HttpMethod.HEAD, "/orders"));
+        assertInstanceOf(RouteMatch.NotFound.class, matcher.match(HttpMethod.HEAD, "/missing"));
     }
 
     @Test

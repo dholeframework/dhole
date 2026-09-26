@@ -17,7 +17,9 @@ import org.dhole.http.HttpMethod;
 /**
  * Matches requests against validated routes. Deterministic and independent of registration
  * order: among the routes whose template matches the path, the one for the request method with the
- * most specific template wins (literal segments before parameters).
+ * most specific template wins (literal segments before parameters). A {@code HEAD} request uses the
+ * {@code GET} route of the path (the server sends no body); routes cannot be registered for
+ * {@code HEAD} itself.
  */
 public final class RouteMatcher {
 
@@ -39,6 +41,7 @@ public final class RouteMatcher {
      */
     public RouteMatch match(HttpMethod method, String rawPath) {
         Objects.requireNonNull(method, "method");
+        HttpMethod routeMethod = method == HttpMethod.HEAD ? HttpMethod.GET : method;
         Optional<List<String>> segments = decode(rawPath);
         if (segments.isEmpty()) {
             return new RouteMatch.NotFound();
@@ -47,13 +50,13 @@ public final class RouteMatcher {
         for (Route route : routes) {
             Optional<Map<String, String>> parameters = route.template().match(segments.get());
             if (parameters.isPresent()) {
-                if (route.method() == method) {
+                if (route.method() == routeMethod) {
                     return new RouteMatch.Found(route, Collections.unmodifiableMap(parameters.get()));
                 }
                 allowed.add(route.method());
             }
         }
-        return allowed.isEmpty() ? new RouteMatch.NotFound() : new RouteMatch.MethodNotAllowed(Set.copyOf(allowed));
+        return allowed.isEmpty() ? new RouteMatch.NotFound() : new RouteMatch.MethodNotAllowed(List.copyOf(allowed));
     }
 
     /**
