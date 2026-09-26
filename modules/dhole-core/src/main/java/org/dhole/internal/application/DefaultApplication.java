@@ -1,7 +1,11 @@
-package org.dhole.application;
+package org.dhole.internal.application;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.dhole.application.Application;
+import org.dhole.application.ApplicationContext;
+import org.dhole.application.ApplicationState;
 
 /**
  * Default {@link Application} implementation.

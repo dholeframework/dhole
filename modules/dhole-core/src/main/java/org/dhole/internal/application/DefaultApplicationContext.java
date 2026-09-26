@@ -1,4 +1,6 @@
-package org.dhole.application;
+package org.dhole.internal.application;
+
+import org.dhole.application.ApplicationContext;
 
 /**
  * Default {@link ApplicationContext} implementation.

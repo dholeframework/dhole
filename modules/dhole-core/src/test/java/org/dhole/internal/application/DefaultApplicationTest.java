@@ -1,9 +1,11 @@
-package org.dhole.application;
+package org.dhole.internal.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.dhole.application.ApplicationContext;
+import org.dhole.application.ApplicationState;
 import org.junit.jupiter.api.Test;
 
 class DefaultApplicationTest {
