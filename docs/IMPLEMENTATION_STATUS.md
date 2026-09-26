@@ -14,14 +14,14 @@ v0.1
 
 ```text
 M7 — Validation + Error Handling COMPLETE LOCALLY
-M8 — CLI + Build + Dev Mode IN PROGRESS
+M8 — CLI + Build + Dev Mode COMPLETE LOCALLY
+M9 — Database SPI + Tuprel NOT STARTED
 ```
 
 ## Current Slice
 
 ```text
-M8 architecture decisions recorded; implementation starting
-(M7 complete locally, not yet pushed; CI pending)
+M7 and M8 complete locally; not yet pushed; CI pending
 ```
 
 ## Status
@@ -35,7 +35,8 @@ M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
 M6 — Serialization + Binding COMPLETE (local build + GitHub Actions on 0bec555)
 M7 — Validation + Errors     COMPLETE LOCALLY (CI pending)
-M8 — CLI + Build + Dev Mode  IN PROGRESS
+M8 — CLI + Build + Dev Mode  COMPLETE LOCALLY (CI pending)
+M9 — Database + Tuprel      NOT STARTED
 ```
 
 ---
@@ -438,11 +439,71 @@ Roadmap §11, verified:
     errors in hello-api (UsersApiTest: 200, 422 with fields, 404 envelope, 400 binding)
 ```
 
+## M8 Progress
+
+### M8 — CLI + Build + Dev Mode
+
+Status: COMPLETE LOCALLY (CI pending)
+
+```text
+Module activation (MODULE_SYSTEM.md §29):
+[x] dhole-core org.dhole.internal.module: ModuleIndex ("dhole-modules 1" / descriptor
+    "dhole-module 1"), ModuleActivator, ActivationContext, ModuleRuntime (dependency order,
+    rollback, reverse stop), FAILED state; Bootstrap reads modules.idx via the application loader;
+    internal Launcher (AutoCloseable) for tooling; Dhole.run reports startup failure and exits 1
+[x] module.idx descriptors in config, di, http, routing, serialization, json, validation, web;
+    dhole-web WebActivator (Configuration -> port/environment -> WebRuntime); dhole-config
+    internal Configuration entry point; WebDiagnostics (read-only graph check for doctor)
+
+Build (tools/dhole-build, BUILD_SYSTEM.md §21):
+[x] dhole.toml subset reader and validation; distribution catalog lib/dhole-distribution.idx;
+    Selection (runtime closure + test tools); dhole.lock v1 (SHA-256, verify, --update-lock);
+    in-process javac with the metadata compiler; modules.idx generation; staged output;
+    reproducible application JAR + bin scripts + locked JARs; TestRunner (bundled JUnit Platform)
+
+Dev mode (modules/dhole-devtools, DEV_MODE.md, HOT_RELOAD.md level 1):
+[x] polling watcher (src/main/java, src/main/resources, dhole.toml, .env); compile into a fresh
+    directory; stop old application; new application class loader over a reused runtime loader;
+    compile errors keep the previous version; r = restart, q = quit; restart timing printed
+
+CLI (tools/dhole-cli, CLI.md §17):
+[x] dhole new/dev/run/build/test/routes/config [check]/doctor/version; --update-lock, --verbose;
+    exit codes 0/1/2; JavaCheck (Java 8 bytecode) diagnoses old Java and missing javac
+[x] distribution: :dhole-cli:dholeDistribution (bin/dhole, bin/dhole.cmd, lib/*.jar + catalog),
+    :dhole-cli:dholeDistributionZip; docs/GETTING_STARTED.md
+
+Roadmap §12, verified (CliTest, black-box through the real scripts):
+[x] dhole new hello -> dhole dev -> HTTP -> edit controller -> automatic restart -> new response;
+    compile error keeps serving; q -> clean shutdown, port released
+[x] dhole build -> distribution with exactly the locked runtime JARs -> bin/hello and
+    java -jar lib/hello.jar serve HTTP; dhole run; routes; config (secret masked); config check;
+    doctor (lock, metadata, graph, configuration, .env Git status); dhole test (pass and fail)
+[x] hello-api main (Dhole.run) serves HTTP in a separate JVM (DholeRunTest)
+```
+
 ---
 
 ## Tests
 
 ```text
+M8 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 112 tasks (103 executed), no warnings
+  dhole-core:     + ModuleIndexTest 9, ModuleRuntimeTest 7, ModuleActivationTest 4   53 tests, PASSED
+  dhole-config:   + ConfigurationTest 2                                        93 test cases, PASSED
+  dhole-web:      + WebActivatorTest 1                                         59 tests, PASSED
+  dhole-build:    ProjectManifestTest 5, DependencyResolverTest 12, ApplicationBuildTest 5  22 tests, PASSED
+  dhole-devtools: ChangeWatcherTest 2, ApplicationRuntimeTest 2                  4 tests, PASSED
+  dhole-cli:      CliTest 6 (black-box, real distribution scripts)              6 tests, PASSED
+  hello-api:      + DholeRunTest 1                                             10 tests, PASSED
+  other modules                                                               unchanged, PASSED
+  total                                                                      456 test cases, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+NOT EXECUTED: JavaCheck with a Java older than 21 or a JRE without javac (no such runtime on
+  this machine); both paths are simple checks before any Dhole class loads.
+NOT EXECUTED locally: the Unix launcher scripts (bin/dhole, bin/hello); CI (Linux) runs CliTest
+  through them.
+
 M7 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 90 tasks (81 executed), no warnings
@@ -594,10 +655,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 - ApplicationContext declares no members yet. Every member in CORE_ARCHITECTURE.md §21
   (environment, settings, modules, plugins, lifecycle) depends on a type from a later milestone;
   each is added when its type exists.
-- FAILED remains in the lifecycle model but is unreachable in M1: no real fallible startup
-  operation exists. The FAILED transition, rollback and the "startup failure -> FAILED" /
-  "shutdown after partial startup" tests are mandatory in the first milestone that introduces
-  a real fallible startup operation (not necessarily M4). No artificial failure source exists.
+- FAILED is reached since M8: module activation is the first fallible startup operation; started
+  modules are rolled back in reverse order (ModuleRuntimeTest, ModuleActivationTest).
 - Public StartupTask API and registration remain deferred (CORE_ARCHITECTURE.md §40, §64).
 - Application.stop() stays strict (RUNNING only). The JVM shutdown hook uses the internal
   stopIfRunning() and is a no-op outside RUNNING. A JVM shutdown while start() is still in
@@ -608,8 +667,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   logging belongs to observability (M12).
 - DholeTest.runBootstrapsAndStartsTheApplication registers a real shutdown hook in the test
   JVM; it stops that application when the test JVM exits (output goes to a discarded stream).
-- dhole-config is not connected to Dhole.run(); configuration FAILED integration waits for the
-  module/activation mechanism (IMPLEMENTATION_ROADMAP.md §6 "Integração no startup").
+- Configuration reaches Dhole.run through the web module (WebActivator); an application without
+  the web module does not load configuration at startup yet.
 - Secret classification is a name convention (SecretNames); replace with explicit secret
   metadata when the settings model gains it (for example security.jwt.secret in M10).
 - An empty variable value counts as absent: required values fail, defaults apply. A process
@@ -618,7 +677,7 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   the specification defines no framework default. Default port 8080 follows the spec examples.
 - Not implemented in M2 (spec items for later): envLong, envDuration, .env.local and
   .env.<environment> variants, custom typed settings binding (CONFIGURATION.md §12, needs
-  M3/M4), `dhole config` CLI (M8). LoadedConfiguration.report() already renders the masked form.
+  M3/M4); `dhole config get` (CONFIGURATION.md §14).
 - dhole-di is standalone: not connected to Dhole.run(), no public binding API yet. Public
   settings.bind/provide (DI.md §7, §9) needs config/DI integration via the module mechanism;
   Settings/Environment are not injectable yet.
@@ -630,9 +689,9 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 - Package-private constructors are not injectable: metadata v1 has no generated factories
   (owner decision, intentional v1 limitation, not a permanent rule). A later metadata version may
   add factories without changing DI semantics.
-- No product build invokes the metadata compiler yet: the Dhole build system (M8) passes
-  -Adhole.application from dhole.toml [build] main. Inside the repository, the internal harness
-  (dhole-compiler "fixture" source set) proves the real Gradle JavaCompile pipeline runs it.
+- dhole build runs the metadata compiler with -Adhole.application from dhole.toml [build] main.
+  Inside the repository, the Gradle harness (dhole-compiler "fixture", hello-api
+  generateModulesIndex) mirrors that contract.
 - Build-time dependency-graph validation is deferred, not dropped: the first milestone with real
   structural roots (Controller, M5+) must connect them to the metadata compiler's validator and
   diagnostic path (METADATA_COMPILER.md §34.1). Runtime-only DI-001..003 is not the final design.
@@ -642,8 +701,8 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   metadata; generic TypeRef (§14); metadata cache keys (§50); dhole metadata CLI (§58).
 - On this machine, VS Code Java/Gradle processes also wrote JVM heap dumps (*.hprof, now ignored)
   into the repository root; they were left in place, not deleted.
-- M5 serves HTTP only through the internal WebRuntime (tests); Dhole.run(App.class) does not start
-  the web stack until the module/runtime composition mechanism exists (CORE_ARCHITECTURE.md, M5).
+- Dhole.run(App.class) starts the web stack through modules.idx and WebActivator (M8). WebRuntime
+  stays internal; tests also start it directly.
 - Handlers cannot reach request-scoped components through public API yet (Provider<T> access,
   COMPONENT_MODEL.md §30, and parameter binding in M6); the pipeline opens and closes the scope.
 - Not implemented in M5 (later): OPTIONS, Router head/options/resource/named routes,
@@ -665,6 +724,17 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   keep plain-text bodies and no request ID (ERRORS.md §12).
 - Not implemented in M7 (later): localized messages, rule groups, async/database rules, validation
   of path/query/header values, RateLimitError, structured logging (M12).
+- The web module binds 127.0.0.1 in development and test, and all interfaces in production.
+- Dev mode recompiles the whole main source set on every change (the metadata compiler indexes all
+  types); resource and .env changes also recompile. Restart waits for the server to stop, not for
+  a separate in-flight request drain.
+- The application compile class path is the full runtime closure, so bundled third-party types
+  (for example Jackson) are visible to application code at compile time.
+- dhole routes lists typed routes (routes.idx); raw Request routes have no build metadata.
+- dhole test uses the bundled JUnit Jupiter 6.1.3 with APP_ENV=test; no filters beyond class names.
+- Not implemented in M8 (later): dhole add/remove/update/dependencies, Maven repositories and
+  [external-dependencies], dhole clean/info/make, dhole config get, --offline, --json output,
+  incremental compilation, resource-only reload, plugin participation in restart.
 - Not implemented in M6 (later): Cookie/Auth/FilePart/RequestContext sources, List<T> query values,
   custom converters and serializers registration, text/plain and octet-stream request bodies,
   build-time serialization metadata (SERIALIZATION.md §19), missing-vs-null for PATCH beyond records.
@@ -844,18 +914,8 @@ git status
 ## Next Recommended Action
 
 ```text
-M8 — CLI + Build + Dev Mode (NOT STARTED). M7 is pushed together with M8 and then verified in CI.
-```
-
-Read before M8:
-
-```text
-docs/CLI.md
-docs/BUILD_SYSTEM.md
-docs/DEV_MODE.md, docs/HOT_RELOAD.md
-docs/CONFIGURATION.md, docs/METADATA_COMPILER.md, docs/MODULE_SYSTEM.md
-docs/PROJECT_STRUCTURE.md, docs/REPOSITORY_STRUCTURE.md, docs/TESTING.md
-docs/IMPLEMENTATION_ROADMAP.md (section 12)
+Push M7 + M8 and verify them in GitHub Actions; then record the verified run.
+M9 — Database SPI + Tuprel Integration (NOT STARTED). Start only on explicit request.
 ```
 
 ---
