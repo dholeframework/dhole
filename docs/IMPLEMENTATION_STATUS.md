@@ -19,7 +19,7 @@ M4 — Metadata Compiler
 ## Current Slice
 
 ```text
-M4 complete (final slice: repository build integration)
+M5 architecture decisions recorded; implementation starting
 ```
 
 ## Status
@@ -30,7 +30,7 @@ M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
-M5 — HTTP + Routing          NOT STARTED
+M5 — HTTP + Routing          IN PROGRESS
 ```
 
 ---
@@ -488,6 +488,21 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M5 — HTTP + Routing
+
+```text
+- Server: first official/internal adapter over the JDK jdk.httpserver module (HTTP/1.1, virtual
+  threads), internal to dhole-http; no com.sun.net.httpserver type in public API. (HTTP.md §18)
+- Handler: public Handler { Object handle(Request) throws Exception }; M6 must add typed
+  handlers without an ambiguous one-argument overload; M6 design not decided. (ROUTING.md §14)
+- Runtime: internal WebRuntime in dhole-web composes metadata, DI, controllers, routes,
+  middleware, request scope and server; no new public entry point; hello-api main keeps
+  Dhole.run; hello-api black-box test starts WebRuntime. (CORE_ARCHITECTURE.md, M5 decisions)
+- Controller roots from index supertype lines (no format change); controller graphs validated
+  at startup before listening; build-time validation awaits a shared symbolic graph model
+  (dedicated architectural decision). (CORE_ARCHITECTURE.md, METADATA_COMPILER.md §34.1)
 ```
 
 ### Owner decisions for M4 — Metadata Compiler

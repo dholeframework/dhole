@@ -297,3 +297,15 @@ Binding de path/query/header/body é definido em:
 ```text
 PARAMETER_BINDING.md
 ```
+
+---
+
+## 18. Decisões M5
+
+- O primeiro adapter oficial é interno a `dhole-http` e usa o módulo JDK `jdk.httpserver` (`com.sun.net.httpserver`), HTTP/1.1, com virtual threads (um por request). É o primeiro adapter oficial/interno, não a arquitetura permanente de servidor de produção: outro servidor pode substituí-lo ou coexistir atrás do mesmo SPI sem alterar código da aplicação.
+- Nenhum tipo `com.sun.net.httpserver` aparece em API pública. A aplicação usa apenas `HttpServer`, `HttpHandler`, `Request`, `Response`, `HttpMethod`, `HttpStatus` e `Headers`.
+- O servidor possui o executor que cria; `stop()` liberta servidor e executor.
+- `Request.header(name)` devolve o primeiro valor ou `null` quando ausente (secção 3).
+- Mapeamento de retorno no M5 (sem serialization): `Response` tal como está; `String` → `200 text/plain; charset=UTF-8`; `null` → `204`; outros tipos falham com `500` até ao M6.
+- `405 Method Not Allowed` não inclui ainda header `Allow`.
+- O body do request é lido com limite interno de 1 MiB (`413` acima disso) até existir configuração de limites.

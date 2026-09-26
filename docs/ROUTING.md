@@ -226,3 +226,31 @@ routes.group("/api/v1", v1 -> {
 ```
 
 Estratégias por header poderão ser adicionadas posteriormente.
+
+---
+
+## 14. Decisões M5
+
+Contrato de handler do M5:
+
+```java
+@FunctionalInterface
+public interface Handler {
+    Object handle(Request request) throws Exception;
+}
+```
+
+- `Router.get/post/put/patch/delete(String, Handler)` devolvem `RouteDefinition`.
+- No M5, `Handler` significa "executar um request já encontrado pelo router". Binding de parâmetros Java e invocação de métodos arbitrários (`User find(long id)`) pertencem ao M6.
+- Restrição registada para o M6: adicionar outro overload genérico de um argumento diretamente a `Router.get(String, ...)` tornaria lambdas implícitas de um argumento (`request -> "Hello World"`) potencialmente ambíguas. O M6 deve introduzir method references tipadas de forma compatível com o código-fonte existente; o desenho concreto é decidido no M6.
+
+Regras de routing do M5:
+
+- templates começam por `/`, sem segmentos vazios; `{name}` ocupa um segmento inteiro; nomes de parâmetros não se repetem na mesma rota; templates malformados são erro de registo;
+- groups compõem prefixos sem barras duplicadas; `group("/users", users -> users.get("/", ...))` regista `/users`; groups podem ser aninhados (secção 5);
+- sem normalização de barra final no request: `/hello/` não corresponde a `/hello`;
+- segmentos literais têm precedência sobre parâmetros na mesma posição; o matching é determinístico e não depende da ordem de registo;
+- path inexistente → `404`; path existente com método não registado → `405`; route matching ocorre antes do middleware;
+- rotas com o mesmo método e a mesma forma (nomes de parâmetros ignorados) são conflito antes do servidor aceitar tráfego;
+- `use(middleware)` aplica-se às rotas do group (e groups aninhados) e deve ser declarado antes das rotas desse group; a ordem é: group exterior primeiro, depois ordem de `use`;
+- valores de path parameters são entregues em bruto (strings, percent-decoded); conversão de tipos é M6.

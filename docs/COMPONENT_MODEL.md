@@ -547,6 +547,16 @@ O container deve impedir captive dependencies.
 
 ---
 
+Decisão M5 (request scope):
+
+- `REQUEST` é implementado no DI: uma instância por request scope, reutilizada dentro do mesmo request, nunca partilhada entre requests;
+- o web runtime abre um request scope por HTTP request e fecha-o sempre, com sucesso ou falha; recursos `AutoCloseable` request-scoped são fechados uma única vez, em ordem inversa;
+- resolver um componente `REQUEST` fora de um request é erro;
+- um `SINGLETON` que dependa de um componente `REQUEST` (diretamente ou através de `PROTOTYPE`) é `Scope Error` na validação do graph;
+- não se usa `ThreadLocal`: o scope é passado explicitamente pela pipeline.
+
+---
+
 # 30. Provider/Lazy access
 
 Quando necessário:

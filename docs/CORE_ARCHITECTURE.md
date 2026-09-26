@@ -899,6 +899,15 @@ Importante:
 
 ---
 
+Decisões M5:
+
+- `Controller` (`org.dhole.web.Controller`) é o primeiro root estrutural. Os controllers são identificados pelas linhas `supertype org.dhole.web.Controller` do `components.idx` (sem mudança de formato); tipos indexados que não são controllers nem alcançáveis a partir deles não são ativados.
+- O graph alcançável de cada controller é validado no startup, antes de o servidor aceitar tráfego; DHOLE-DI-001/002/003 continuam diagnostics de startup no M5.
+- Mover a mesma validação para `javac` exige extrair um modelo de graph simbólico, sem dependências, partilhado por `dhole-di` e `dhole-compiler`; essa extração é uma decisão arquitetural própria e não duplica regras de resolução.
+- Enquanto não existir o mecanismo de composição de módulos, um `WebRuntime` interno de `dhole-web` compõe metadata, DI, controllers, rotas, middleware, request scope e servidor. Não é API de aplicação: `Dhole.run(App.class)` continua a ser o único entry point e passará a compor as mesmas capacidades quando esse mecanismo existir.
+
+---
+
 # 32. `Router`
 
 `Router` é uma API pública controlada.

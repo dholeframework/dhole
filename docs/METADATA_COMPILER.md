@@ -918,6 +918,7 @@ Descoberta e validação:
 - a validação do dependency graph em build-time torna-se aplicável quando existirem roots estruturais reais (Controller, M5+) e bindings conhecidos em build-time; não se fabricam roots para a antecipar;
 - o primeiro milestone que introduzir esses roots deve ligá-los ao validator/diagnostic path do metadata compiler (DHOLE-DI-001/002/003 como diagnostics de `javac`);
 - até lá, DHOLE-DI-001/002/003 são reportados pelo runtime DI com a localização registada no índice; esta não é a forma final.
+- M5: `Controller` é o primeiro root estrutural (ver CORE_ARCHITECTURE.md, decisões M5); o graph dos controllers é validado no startup, antes de o servidor escutar. A validação em `javac` aguarda o modelo de graph simbólico partilhado (decisão arquitetural dedicada).
 
 Integração no build do repositório (harness interno, não contrato do Dhole):
 
