@@ -972,6 +972,56 @@ constructor com.acme.shop.UserRepository
 source com/acme/shop/UserService.java:7
 ```
 
+## 34.3 Formato `META-INF/dhole/routes.idx` v1 (M6)
+
+Metadata de routing/binding, separada de `components.idx` (que não muda). Versão independente.
+
+O compiler analisa, via `javac` Trees e apenas para este fim, os registos tipados dentro de `Controller.routes(Router)`:
+
+```java
+routes.get("/users/{id}").to(this::find);
+routes.group("/api", api -> api.post("/users").to(this::create));
+```
+
+- o path efetivo tem de ser conhecido em build-time (literal/constante; prefixos de groups literais aplicados como no runtime); caso contrário, DHOLE-ROUTE-001;
+- o handler tem de ser `this::metodo` do próprio controller; caso contrário, DHOLE-ROUTE-002;
+- a classificação de sources (PARAMETER_BINDING.md §38) é feita aqui; erros são diagnostics de `javac` (DHOLE-BIND-*);
+- rotas de `Request` cru não geram metadata.
+
+Formato (UTF-8, `\n`, sem timestamps, paths absolutos nem valores):
+
+```text
+dhole-routes 1
+
+route <controller-binary-name> <METHOD> <path>
+handler <method-name>
+parameter <name> <SOURCE> <type>
+response <type>
+source <relative-path>:<line>
+```
+
+Regras:
+
+- primeira linha exatamente `dhole-routes 1`; outra versão falha com erro de compatibilidade;
+- um bloco por rota, separado por linha vazia, ordenado por controller, path e método; a identidade estável é `controller + METHOD + path`;
+- `parameter` repete-se pela ordem dos parâmetros do handler (zero ou mais); `<SOURCE>` ∈ `PATH`, `QUERY`, `HEADER`, `BODY`, `REQUEST`; o tipo é o tipo declarado (wrappers incluídos, ex. `org.dhole.web.Query<java.lang.String>`);
+- `<type>`: binary name, primitive ou `void`, com argumentos genéricos `<a,b>` sem espaços e arrays com sufixo `[]`; wildcards não são suportados;
+- `response` é o tipo de retorno genérico declarado (`void` sem conteúdo);
+- `source` opcional;
+- no runtime, cada rota tipada registada procura o seu bloco pela identidade estável; ausência ou incompatibilidade (aridade) falha o startup com "Rebuild the application"; não há fallback reflexivo.
+
+Exemplo:
+
+```text
+dhole-routes 1
+
+route com.acme.shop.UserController GET /users/{id}
+handler find
+parameter id PATH long
+response com.acme.shop.User
+source com/acme/shop/UserController.java:12
+```
+
 ---
 
 # 35. Incremental compilation
@@ -1126,6 +1176,8 @@ Prefixos reservados:
 ```text
 DHOLE-META-*   metadata compiler / metadata format (ex.: DHOLE-META-001 application class inválida ou inexistente)
 DHOLE-DI-*     dependency injection (DHOLE-DI-001 missing, DHOLE-DI-002 ambiguous, DHOLE-DI-003 circular)
+DHOLE-ROUTE-*  registo de rotas tipadas (DHOLE-ROUTE-001 path não determinável em build-time, DHOLE-ROUTE-002 handler que não é this::metodo)
+DHOLE-BIND-*   binding de parâmetros (DHOLE-BIND-001 source indeterminada, DHOLE-BIND-002 placeholder sem parâmetro ou Path<T> sem placeholder, DHOLE-BIND-003 mais de um body, DHOLE-BIND-004 tipo não suportado para a source)
 ```
 
 Novos códigos são adicionados apenas quando um diagnostic real os usa.

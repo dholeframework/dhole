@@ -255,3 +255,24 @@ Regras de routing do M5:
 - rotas com o mesmo método e a mesma forma (nomes de parâmetros ignorados) são conflito antes do servidor aceitar tráfego;
 - `use(middleware)` aplica-se às rotas do group (e groups aninhados) e deve ser declarado antes das rotas desse group; a ordem é: group exterior primeiro, depois ordem de `use`;
 - valores de path parameters são entregues em bruto (strings, percent-decoded); conversão de tipos é M6.
+
+---
+
+## 15. Decisões M6 — handlers tipados
+
+Sintaxe canónica para handlers com binding de parâmetros:
+
+```java
+routes.get("/users/{id}").to(this::find);
+routes.post("/users").to(this::create);
+
+User find(long id) { ... }
+User create(CreateUser input) { ... }
+```
+
+- `get/post/put/patch/delete(String path)` devolvem um `RouteBuilder`; `to(...)` aceita `Handler0` a `Handler3` (funções Java por aridade, sem semântica HTTP) e devolve `RouteDefinition`.
+- A forma de dois argumentos `routes.get(path, request -> ...)` continua a ser a API de handler de `Request` cru (M5) e não muda. `to(...)` não aceita `Handler`.
+- Não existem overloads da mesma aridade ao lado de `get(String, Handler)`, pelo que não há ambiguidade com lambdas implícitas.
+- Rotas tipadas exigem path conhecido em build-time (literal ou constante, incluindo prefixos literais de groups) e referência `this::metodo` do controller; caso contrário é erro de build. Rotas dinâmicas usam a API de `Request` cru.
+- `RouteBuilder` sem `to(...)` é erro de startup.
+- Os exemplos anteriores `routes.get("/users/{id}", this::find)` devem ler-se como `routes.get("/users/{id}").to(this::find)`.

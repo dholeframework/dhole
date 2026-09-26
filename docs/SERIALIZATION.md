@@ -370,3 +370,15 @@ server-sent events
 ## 21. Regra central
 
 > **Serialization é infraestrutura. O developer continua a trabalhar com tipos Java.**
+
+---
+
+## 22. Decisões M6
+
+- Contratos públicos em `dhole-serialization` (`org.dhole.serialization`): `Serializer` (media type, deserialize de `InputStream`, serialize para `OutputStream`), `SerializerRegistry` (seleção por media type e negociação de `Accept`), `MediaType`, `TypeRef<T>`, `SerializationException`.
+- Implementação JSON oficial: adapter interno de `dhole-json` sobre Jackson (`jackson-databind` + módulo `java.time`). Nenhum tipo Jackson aparece em API pública; `ObjectMapper` não é configurável publicamente no M6.
+- Configuração explícita e estrita: JSON malformado, tokens a mais, propriedades desconhecidas, tipos incompatíveis (sem coerção de escalares), enums inválidos, números fracionários para inteiros e `null` em primitivos falham com `SerializationException` (→ `400`).
+- Records: propriedades em falta falham (`400`); `null` explícito é aceite em tipos de referência. Isto distingue "missing" de "explicit null" (secção 11).
+- `java.time` em ISO-8601 textual, nunca timestamps numéricos.
+- Sem default typing nem deserialização polimórfica; nomes de classes vindos do JSON nunca são carregados.
+- Negociação HTTP (`Accept`, `Content-Type`, `406`, `415`) pertence a `dhole-web`/`SerializerRegistry`, não ao Jackson.

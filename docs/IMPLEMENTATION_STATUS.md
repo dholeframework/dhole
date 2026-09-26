@@ -13,13 +13,13 @@ v0.1
 ## Current Milestone
 
 ```text
-M5 — HTTP + Routing
+M6 — Serialization + Parameter Binding
 ```
 
 ## Current Slice
 
 ```text
-M5 complete (final slice: hello-api served over HTTP; 405 Allow and HEAD corrections)
+M6 architecture decisions recorded; implementation starting
 ```
 
 ## Status
@@ -31,7 +31,7 @@ M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
-M6 — Serialization + Binding NOT STARTED
+M6 — Serialization + Binding IN PROGRESS
 ```
 
 ---
@@ -571,6 +571,21 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M6 — Serialization + Parameter Binding
+
+```text
+- JSON: Jackson (databind + java.time module) internal to dhole-json; no Jackson type in public
+  API; strict explicit configuration; no default typing. (SERIALIZATION.md §22)
+- Typed handlers: routes.get(path).to(this::find) with Handler0..Handler3; the M5 two-argument
+  Request handler API is unchanged. (ROUTING.md §15)
+- Metadata: separate META-INF/dhole/routes.idx ("dhole-routes 1") from javac Trees analysis of
+  typed registrations; static paths and this::method required; no SerializedLambda, no reflective
+  fallback. (METADATA_COMPILER.md §34.3)
+- Sources: conservative inference (Request, explicit wrappers, PATH by name, single structured
+  BODY on POST/PUT/PATCH); QUERY only via Query<T>; ambiguity is a build error.
+  (PARAMETER_BINDING.md §38)
 ```
 
 ### Owner decisions for M5 — HTTP + Routing

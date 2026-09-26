@@ -669,3 +669,25 @@ User profile(Auth<User> auth)
 Quando o caso deixa de ser óbvio, o developer pode tornar a source explícita.
 
 > **Infer when certain; require clarity when ambiguous.**
+
+---
+
+## 38. Decisões M6
+
+Registo de handlers tipados: `routes.get("/users/{id}").to(this::find)` (ver ROUTING.md §15). A forma `routes.get(path, handler)` continua a ser o handler de `Request` cru.
+
+Classificação conservadora de sources, decidida em build-time e registada em `routes.idx`:
+
+1. parâmetro do tipo `Request` → `REQUEST`;
+2. `Path<T>`, `Query<T>`, `Header<T>`, `Body<T>` → source explícita (nunca reinferida); `Path<T>` exige placeholder com o mesmo nome;
+3. nome igual a um placeholder da rota → `PATH` (tipo escalar);
+4. um único parâmetro estruturado restante em `POST`/`PUT`/`PATCH`, sem `Body<?>` explícito → `BODY`;
+5. qualquer outro caso é erro de build: escalar não ligado, segundo parâmetro estruturado, body inferido em `GET`/`DELETE`, source ambígua. `QUERY` nunca é inferido: usar `Query<T>`.
+
+Placeholders sem parâmetro correspondente são erro de build.
+
+`Header<T>` usa o nome do parâmetro em kebab-case como nome do header (`acceptLanguage` → `Accept-Language`).
+
+Conversões escalares (PATH/QUERY/HEADER): `String`, primitivos e wrappers, `UUID`, enums (nome exato), `LocalDate`, `LocalDateTime`, `Instant` (ISO-8601). Falha de conversão, parâmetro em falta (`Query`/`Header` pedido com `value()`), body em falta ou inválido → `400`; `Content-Type` do body não suportado → `415`; `Accept` sem formato suportado → `406`.
+
+Os wrappers expõem `value()` (falha com `400` quando ausente) e `optional()`.
