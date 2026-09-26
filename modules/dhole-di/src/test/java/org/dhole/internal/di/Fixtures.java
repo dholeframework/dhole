@@ -128,6 +128,12 @@ final class Fixtures {
         }
     }
 
+    public static final class LoopingGateway implements PaymentGateway {
+
+        public LoopingGateway(OrderService orders) {
+        }
+    }
+
     public static final class NeedsMissing {
 
         public NeedsMissing(UserService users, AbstractStorage storage) {
