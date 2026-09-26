@@ -31,7 +31,7 @@ import com.sun.source.util.Trees;
  */
 public final class MetadataProcessor extends AbstractProcessor {
 
-    static final String APPLICATION_OPTION = "dhole.application";
+    public static final String APPLICATION_OPTION = "dhole.application";
 
     private final Set<String> compiledTypes = new TreeSet<>();
     private Optional<String> application = Optional.empty();

@@ -1,0 +1,163 @@
+package org.dhole.internal.build;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+/**
+ * Assembles {@code build/distributions/<name>/} (BUILD_SYSTEM.md §21): the application JAR with
+ * {@code Main-Class} and a {@code Class-Path} to its sibling runtime JARs, the locked runtime JARs
+ * copied byte for byte, and launcher scripts for Unix-like systems and Windows. No fat JAR, no
+ * absolute paths. The application JAR is reproducible: sorted entries and fixed timestamps.
+ */
+public final class ApplicationPackager {
+
+    /**
+     * The timestamp of every JAR entry, as used by reproducible Java builds.
+     */
+    static final LocalDateTime ENTRY_TIME = LocalDateTime.of(1980, 2, 1, 0, 0);
+
+    private ApplicationPackager() {
+    }
+
+    /**
+     * @param classes the compiled application, including its generated metadata
+     * @param runtime the verified runtime artifacts, in lock order
+     * @return the distribution directory
+     */
+    public static Path assemble(ProjectLayout layout, ProjectManifest manifest, String dholeVersion, Path classes,
+            List<Path> runtime) {
+        Path distribution = layout.distributions().resolve(manifest.name());
+        try {
+            delete(distribution);
+            Path lib = Files.createDirectories(distribution.resolve("lib"));
+            Path bin = Files.createDirectories(distribution.resolve("bin"));
+            List<String> classPath = new ArrayList<>();
+            for (Path artifact : runtime) {
+                Path target = lib.resolve(artifact.getFileName().toString());
+                Files.copy(artifact, target, StandardCopyOption.COPY_ATTRIBUTES);
+                classPath.add(target.getFileName().toString());
+            }
+            writeJar(classes, lib.resolve(manifest.name() + ".jar"), manifest.main(), classPath, dholeVersion);
+            Path unix = bin.resolve(manifest.name());
+            Files.writeString(unix, unixScript(manifest.name()), StandardCharsets.UTF_8);
+            executable(unix);
+            Files.writeString(bin.resolve(manifest.name() + ".cmd"), windowsScript(manifest.name()), StandardCharsets.UTF_8);
+            return distribution;
+        } catch (IOException e) {
+            throw new BuildException("Build Error\n\nUnable to assemble " + layout.relative(distribution) + ": " + e.getMessage(), e);
+        }
+    }
+
+    static void writeJar(Path classes, Path jar, String main, List<String> classPath, String dholeVersion) throws IOException {
+        Manifest manifest = new Manifest();
+        Attributes attributes = manifest.getMainAttributes();
+        attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        attributes.put(Attributes.Name.MAIN_CLASS, main);
+        if (!classPath.isEmpty()) {
+            attributes.put(Attributes.Name.CLASS_PATH, String.join(" ", classPath));
+        }
+        attributes.putValue("Created-By", "Dhole " + dholeVersion);
+        List<Path> entries;
+        try (Stream<Path> walk = Files.walk(classes)) {
+            entries = walk.filter(path -> !path.equals(classes))
+                    .filter(path -> !classes.relativize(path).toString().replace('\\', '/').equalsIgnoreCase(JarFile.MANIFEST_NAME))
+                    .sorted(Comparator.comparing(path -> classes.relativize(path).toString().replace('\\', '/')))
+                    .toList();
+        }
+        try (OutputStream file = Files.newOutputStream(jar); ZipOutputStream output = new ZipOutputStream(file)) {
+            output.putNextEntry(entry("META-INF/"));
+            output.closeEntry();
+            output.putNextEntry(entry(JarFile.MANIFEST_NAME));
+            manifest.write(output);
+            output.closeEntry();
+            for (Path path : entries) {
+                String name = classes.relativize(path).toString().replace('\\', '/');
+                if (name.equals("META-INF")) {
+                    continue;
+                }
+                if (Files.isDirectory(path)) {
+                    output.putNextEntry(entry(name + "/"));
+                } else {
+                    output.putNextEntry(entry(name));
+                    Files.copy(path, output);
+                }
+                output.closeEntry();
+            }
+        }
+    }
+
+    static String unixScript(String name) {
+        return """
+                #!/bin/sh
+                # Starts %1$s. Generated by 'dhole build'; do not edit.
+                APP_HOME=$(cd "$(dirname "$0")/.." && pwd -P) || exit 1
+                if [ -n "$JAVA_HOME" ]; then
+                    JAVA="$JAVA_HOME/bin/java"
+                else
+                    JAVA=java
+                fi
+                exec "$JAVA" $JAVA_OPTS -jar "$APP_HOME/lib/%1$s.jar" "$@"
+                """.formatted(name);
+    }
+
+    static String windowsScript(String name) {
+        return """
+                @echo off
+                rem Starts %1$s. Generated by 'dhole build'; do not edit.
+                setlocal
+                set "APP_HOME=%%~dp0.."
+                set "JAVA_EXE=java.exe"
+                if defined JAVA_HOME set "JAVA_EXE=%%JAVA_HOME%%\\bin\\java.exe"
+                "%%JAVA_EXE%%" %%JAVA_OPTS%% -jar "%%APP_HOME%%\\lib\\%1$s.jar" %%*
+                exit /b %%ERRORLEVEL%%
+                """.formatted(name).replace("\n", "\r\n");
+    }
+
+    private static ZipEntry entry(String name) {
+        ZipEntry entry = new ZipEntry(name);
+        entry.setTimeLocal(ENTRY_TIME);
+        return entry;
+    }
+
+    private static void executable(Path file) throws IOException {
+        try {
+            Files.setPosixFilePermissions(file, EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
+                    PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE));
+        } catch (UnsupportedOperationException e) {
+            // Not a POSIX file system (Windows): the script is started through sh.
+        }
+    }
+
+    static void delete(Path directory) throws IOException {
+        if (!Files.exists(directory)) {
+            return;
+        }
+        try (Stream<Path> walk = Files.walk(directory)) {
+            for (Path path : walk.sorted(Comparator.reverseOrder()).toList()) {
+                try {
+                    Files.delete(path);
+                } catch (FileSystemException e) {
+                    throw new IOException("Unable to delete " + path + " (is the application still running?)", e);
+                }
+            }
+        }
+    }
+}
