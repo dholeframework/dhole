@@ -635,3 +635,13 @@ User create(CreateUser input) {
 é possível porque o Dhole executa uma pipeline organizada antes e depois desse método.
 
 > **Simple handler, explicit pipeline.**
+
+---
+
+## 36. Decisões M7 — Request ID
+
+- O Dhole gera sempre um UUID (formato canónico do JDK) por request, no início do pipeline, antes do error boundary.
+- Um `X-Request-Id` enviado pelo cliente é ignorado no M7 (nem validado, nem propagado); uma política de confiança para proxies pode ser desenhada mais tarde.
+- Toda a resposta do pipeline (sucesso ou erro) inclui `X-Request-Id`; todo o envelope de erro inclui o mesmo valor em `error.requestId`.
+- O ID é transportado pelo contexto do request, sem `ThreadLocal`; os logs de erros inesperados incluem-no.
+- Não é tracing distribuído.

@@ -1022,6 +1022,30 @@ response com.acme.shop.User
 source com/acme/shop/UserController.java:12
 ```
 
+
+## 34.4 Formato `META-INF/dhole/validation.idx` v1 (M7)
+
+Metadata de validação, separada de `components.idx` e `routes.idx`, com versão independente.
+
+O compiler analisa, via `javac` Trees, o `public static Rules<T> rules()` de cada tipo `Validatable` do application root. Formato canónico: um único `return` de uma cadeia fluente iniciada por `Rules.forType(T.class)`; cada `.field(...)` recebe uma method reference `T::accessor` sem argumentos do próprio tipo validado. Outras formas são erro de build.
+
+```text
+dhole-validation 1
+
+type <binary-name>
+field <name> <type>
+source <relative-path>:<line>
+```
+
+Regras:
+
+- primeira linha exatamente `dhole-validation 1`; outra versão falha com erro de compatibilidade;
+- um bloco por tipo validado, ordenado por `<binary-name>`;
+- `field` repete-se pela ordem de declaração em `rules()` (ordem semântica: o runtime associa a i-ésima chamada `field(...)` ao i-ésimo nome e verifica a contagem); `<name>` é o nome do componente do record ou da propriedade (`getEmail`/`isActive` → `email`/`active`, caso contrário o nome do método); `<type>` usa a gramática de `routes.idx`;
+- `source` opcional; sem valores de input;
+- metadata ausente ou com contagem diferente falha com "Rebuild the application".
+
+Diagnostics DHOLE-VAL-*: 001 forma de `rules()` não suportada (inclui `Validatable` sem `rules()`), 002 argumento de `field(...)` que não é method reference de um accessor do tipo validado, 003 regra incompatível com o tipo do campo, 004 `nested()`/`eachNested()` sobre tipo não `Validatable`, 005 campo declarado mais de uma vez.
 ---
 
 # 35. Incremental compilation
@@ -1178,6 +1202,7 @@ DHOLE-META-*   metadata compiler / metadata format (ex.: DHOLE-META-001 applicat
 DHOLE-DI-*     dependency injection (DHOLE-DI-001 missing, DHOLE-DI-002 ambiguous, DHOLE-DI-003 circular)
 DHOLE-ROUTE-*  registo de rotas tipadas (DHOLE-ROUTE-001 path não determinável em build-time, DHOLE-ROUTE-002 handler que não é this::metodo)
 DHOLE-BIND-*   binding de parâmetros (DHOLE-BIND-001 source indeterminada, DHOLE-BIND-002 placeholder sem parâmetro ou Path<T> sem placeholder, DHOLE-BIND-003 mais de um body, DHOLE-BIND-004 tipo não suportado para a source)
+DHOLE-VAL-*    análise de validation rules (ver §34.4)
 ```
 
 Novos códigos são adicionados apenas quando um diagnostic real os usa.

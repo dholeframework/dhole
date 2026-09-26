@@ -118,15 +118,20 @@ Formato base:
 
 ## 8. Validation errors
 
-Validation adiciona `fields`.
+Validation adiciona `fields`. O formato canónico dos erros de campo é o de VALIDATION.md §12: cada erro é um objeto com `code` estável e `message`.
 
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Invalid request.",
+    "message": "The request contains invalid fields.",
     "fields": {
-      "email": ["Invalid email."]
+      "email": [
+        {
+          "code": "INVALID_EMAIL",
+          "message": "Must be a valid email address."
+        }
+      ]
     },
     "requestId": "..."
   }
@@ -187,3 +192,29 @@ DATABASE_ERROR
 ```
 
 Mensagens podem mudar/localizar. Códigos devem ser tratados como contrato.
+
+---
+
+## 12. Decisões M7
+
+API pública (`org.dhole.web`): `AppException` (code estável, `HttpStatus`, mensagem segura), `Errors` (`notFound(resource)`, `badRequest(message)`, `unauthorized(message)`, `forbidden(message)`, `conflict(message)`), `ErrorResponse` (envelope), `ErrorHandler<E>` (`Response handle(E error)`).
+
+O `ErrorHandlerRegistry` é interno. A superfície pública de registo de handlers customizados fica adiada até existir composição por settings/módulos; não existe API temporária de registo.
+
+Mapeamento central (determinístico; handlers específicos antes do fallback):
+
+```text
+BindingException                 -> 400 INVALID_PARAMETER (parâmetros) / BAD_REQUEST (body)
+validation failure               -> 422 VALIDATION_ERROR (com fields)
+AppException                     -> o seu HttpStatus e code (NOT_FOUND 404, BAD_REQUEST 400,
+                                    UNAUTHORIZED 401, FORBIDDEN 403, CONFLICT 409, ...)
+rota inexistente / método        -> 404 NOT_FOUND / 405 METHOD_NOT_ALLOWED (Allow)
+Accept / Content-Type            -> 406 NOT_ACCEPTABLE / 415 UNSUPPORTED_MEDIA_TYPE
+qualquer outra exceção           -> 500 INTERNAL_ERROR
+```
+
+Todos os erros do pipeline usam o envelope da secção 7 em `application/json`, com `requestId`; `details` e `fields` são omitidos quando vazios.
+
+`500` em production: mensagem genérica segura, sem stack trace nem nomes de classes. Em development: `details` pode conter apenas o tipo e a mensagem da exceção; o stack trace completo vai para stderr com o request ID, nunca para o body. O modo development/production é, no M7, uma opção interna de composição do web runtime; passará a derivar do `Environment` real quando existir integração com Settings.
+
+Rejeições de protocolo feitas pelo adapter antes do pipeline (`413`, `501`, query malformada) acontecem antes do stage de request ID e mantêm corpo de texto simples.

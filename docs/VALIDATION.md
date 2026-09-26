@@ -457,3 +457,24 @@ automatic HTTP integration
 +
 manual validator access
 ```
+
+---
+
+## 20. Decisões M7
+
+API pública (`org.dhole.validation`): `Validatable`, `Rules<T>` (com `FieldRules<T, V>`), `Rule<T>`, `Validation`, `ValidationResult`, `ValidationError`, `Validator`. O motor e o `ValidationRegistry` são internos.
+
+Identidade dos campos:
+
+- `.field(CreateUser::email)` não repete o nome em string; o metadata compiler analisa o `rules()` estático e regista os nomes em `META-INF/dhole/validation.idx` (METADATA_COMPILER.md §34.4);
+- o runtime nunca inspeciona lambdas (sem `SerializedLambda`); metadata ausente ou desatualizada falha com "Rebuild the application";
+- `rules()` tem de ser analisável: `public static Rules<T> rules()` com um único `return` de uma cadeia fluente `Rules.forType(T.class).field(T::accessor)...`; ramos condicionais, loops ou helpers que escondam campos são erro de build (DHOLE-VAL-*).
+
+Semântica:
+
+- `null` só produz erro com `required()` (`REQUIRED`); sem `required()`, `null` é aceite e as restantes regras do campo não correm;
+- as regras de um campo correm todas pela ordem declarada (vários erros por campo possíveis); os campos seguem a ordem de declaração; `check(...)` corre depois dos campos;
+- códigos estáveis: `REQUIRED`, `NOT_BLANK`, `MIN_LENGTH`, `MAX_LENGTH`, `INVALID_EMAIL`, `MIN`, `MAX`, `POSITIVE`, `NOT_EMPTY`; regras customizadas usam o seu próprio código;
+- `nested()` e `eachNested()` prefixam os caminhos: `customer.name`, `items[0].quantity`;
+- erros de `check(...)` ao nível do objeto usam o caminho vazio `""`;
+- em HTTP, os parâmetros BODY cujo tipo é `Validatable` são validados depois da deserialização e antes do handler; falha → `422` com o formato da secção 12.

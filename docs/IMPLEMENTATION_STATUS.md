@@ -13,13 +13,13 @@ v0.1
 ## Current Milestone
 
 ```text
-M6 — Serialization + Parameter Binding
+M7 — Validation + Error Handling
 ```
 
 ## Current Slice
 
 ```text
-M6 complete (final slice: typed user routes served with JSON)
+M7 architecture decisions recorded; implementation starting
 ```
 
 ## Status
@@ -32,7 +32,8 @@ M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4
 M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e)
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
 M6 — Serialization + Binding COMPLETE (local build + GitHub Actions on 0bec555)
-M7 — Validation + Errors     NOT STARTED
+M7 — Validation + Errors     IN PROGRESS
+M8 — CLI + Build + Dev Mode  NOT STARTED
 ```
 
 ---
@@ -644,6 +645,19 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M7 — Validation + Error Handling
+
+```text
+- Field names: compiler META-INF/dhole/validation.idx ("dhole-validation 1") from static rules();
+  no SerializedLambda, no string names; unsupported rules() shapes are DHOLE-VAL-* build errors.
+  (METADATA_COMPILER.md §34.4, VALIDATION.md §20)
+- 422 fields format: VALIDATION.md §12 objects {code, message}; ERRORS.md §8 aligned.
+- Request ID: always generated UUID, X-Request-Id response header and error.requestId; client
+  values ignored. (REQUEST_LIFECYCLE.md §36)
+- Public AppException/Errors/ErrorResponse/ErrorHandler and validation API; ErrorHandlerRegistry
+  and dev/prod mode internal to the web runtime until settings integration. (ERRORS.md §12)
 ```
 
 ### Owner decisions for M6 — Serialization + Parameter Binding
