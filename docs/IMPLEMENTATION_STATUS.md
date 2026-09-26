@@ -14,14 +14,14 @@ v0.1
 
 ```text
 M7 — Validation + Error Handling COMPLETE LOCALLY
-M8 — CLI + Build + Dev Mode NOT STARTED
+M8 — CLI + Build + Dev Mode IN PROGRESS
 ```
 
 ## Current Slice
 
 ```text
-M7 complete locally (validation.idx, validation engine, error envelopes, request IDs, 422);
-not yet pushed; CI pending
+M8 architecture decisions recorded; implementation starting
+(M7 complete locally, not yet pushed; CI pending)
 ```
 
 ## Status
@@ -35,7 +35,7 @@ M4 — Metadata Compiler       COMPLETE (local build + GitHub Actions on e17a78e
 M5 — HTTP + Routing          COMPLETE (local build + GitHub Actions on f539d9e)
 M6 — Serialization + Binding COMPLETE (local build + GitHub Actions on 0bec555)
 M7 — Validation + Errors     COMPLETE LOCALLY (CI pending)
-M8 — CLI + Build + Dev Mode  NOT STARTED
+M8 — CLI + Build + Dev Mode  IN PROGRESS
 ```
 
 ---
@@ -711,6 +711,23 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
   ApplicationState. Internal types must not appear in public signatures. Types from the
   roadmap sketch are created only when they have a current M1 responsibility.
 - No public StartupTask API or registration mechanism in M1.
+```
+
+### Owner decisions for M8 — CLI + Build + Dev Mode
+
+```text
+- Module activation: build-generated META-INF/dhole/modules.idx ("dhole-modules 1"); internal
+  activator contract in dhole-core; WebActivator reuses WebRuntime; no ServiceLoader, scanning,
+  global registry, system-property launcher or core->web dependency; no public DholeModule in M8.
+  (MODULE_SYSTEM.md §29)
+- CLI distribution: JVM distribution bin/dhole, bin/dhole.cmd, lib/*.jar; JDK 21+ required and
+  checked at startup (Java missing, version, javac). (CLI.md §17)
+- Dependencies: only artifacts bundled in the installed distribution; no Maven resolution in M8;
+  dhole.lock v1 with SHA-256, verified on every build, never silently rewritten.
+  (BUILD_SYSTEM.md §21)
+- Packaging: build/distributions/<name>/ with bin scripts and lib/<name>.jar (Main-Class,
+  Class-Path) plus locked runtime JARs; no fat JAR, Docker, native, jlink or installers.
+  (BUILD_SYSTEM.md §21)
 ```
 
 ### Owner decisions for M7 — Validation + Error Handling

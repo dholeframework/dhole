@@ -238,3 +238,12 @@ dhole db reset
 deve informar claramente que dados serão removidos.
 
 Em production, exigir flag explícita ou recusar por defeito.
+
+---
+
+## 17. Decisões M8 — distribuição
+
+- A CLI é distribuída como distribuição JVM instalável: `bin/dhole`, `bin/dhole.cmd` e `lib/*.jar` (CLI, ferramentas de build e os módulos/artefactos empacotados).
+- Requisito: JDK 21+ instalado, porque `dhole build`, `dhole test` e `dhole dev` precisam de `javac`. A CLI deteta no arranque Java em falta, versão não suportada e `javac` indisponível, com diagnóstico claro.
+- Os scripts localizam a instalação relativamente a si próprios, montam o classpath a partir de `lib/`, reencaminham os argumentos, propagam o exit code, suportam caminhos com espaços e não embutem caminhos absolutos.
+- O contrato público é o comando `dhole`; `java -jar`, Gradle e Maven nunca são exigidos ao developer. A distribuição é construída pelo build interno do repositório.

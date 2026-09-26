@@ -512,3 +512,30 @@ O Module System permite ao Dhole crescer sem transformar o framework num monóli
 A regra é:
 
 > **Capabilities compose through modules; applications only load what they need.**
+
+---
+
+## 29. Decisões M8 — ativação de módulos
+
+A ponte entre `Dhole.run(App.class)` e as capacidades do framework (web, ...) é metadata de ativação gerada no build, preservando o isolamento do `dhole-core`.
+
+- Recurso versionado `META-INF/dhole/modules.idx` na aplicação, escrito pelo `dhole build` (nunca à mão), UTF-8, determinístico, sem timestamps, caminhos absolutos ou secrets.
+- Cada módulo oficial transporta um descritor `META-INF/dhole/module.idx` (`dhole-module 1`) no seu JAR; o build lê os descritores dos artefactos selecionados (leitura direta de ficheiros conhecidos, não scanning) e escreve o índice da aplicação.
+- Sem `ServiceLoader`, sem classpath/package scanning, sem registos globais mutáveis, sem launcher escolhido por system property, sem dependência de `dhole-core` para `dhole-web`/`routing`/`serialization`/`validation`/`json`.
+- O contrato de ativação é interno ao `dhole-core` (`org.dhole.internal.module`): um activator com `start`/`stop` e um contexto de ativação mínimo. O `DholeModule` público (§4) e o Plugin System não são congelados no M8.
+- O activator é a classe exata nomeada pelo índice, instanciada pelo class loader da aplicação através de um construtor público sem argumentos; sem DI reflexiva de activators. Módulos sem comportamento de runtime não têm activator.
+- Bootstrap: carregar o índice pelo class loader da aplicação, validar versão e formato, validar o graph (módulo requerido em falta, ID duplicado, ciclo, activator desconhecido), ordenar por dependências (desempate determinístico por ID), iniciar por essa ordem, `RUNNING` só depois de todos iniciarem; parar em ordem inversa; falha de um activator faz rollback dos já iniciados e deixa a aplicação em `FAILED`. Nenhum servidor aceita pedidos antes de o startup terminar.
+- O `WebActivator` interno do `dhole-web` reutiliza o `WebRuntime` existente (não há duas implementações) e lê a configuração pelo modelo real do M2 (Settings/Environment).
+- O `dhole dev` reutiliza o mesmo contrato: parar os módulos em ordem inversa, descartar o runtime antigo, criar um novo e ler o novo `modules.idx`; o runtime antigo nunca é mutado.
+
+Formato:
+
+```text
+dhole-modules 1
+
+module <id>
+activator <binary-name>          (opcional)
+requires <id> <id> ...           (opcional)
+```
+
+Blocos ordenados por ID. `modules.idx` é só ativação de capacidades de runtime: não é `dhole.toml`, `dhole.lock`, metadata de resolução de dependências, metadata de componentes nem o formato futuro de plugins.

@@ -314,3 +314,49 @@ METADATA_COMPILER.md
 ```
 
 O build system é responsável por invocar esta fase e integrar os seus diagnostics no output de `dhole build` e `dhole dev`.
+
+---
+
+## 21. Decisões M8
+
+### Resolução de dependências
+
+- No M8 só são resolvíveis artefactos da distribuição Dhole instalada: módulos oficiais e as suas dependências de terceiros empacotadas (por exemplo Jackson para `dhole-json`). Não há acesso à rede: uma aplicação que use apenas capacidades empacotadas compila offline.
+- `[dependencies]` usa nomes de módulos oficiais (`web = "0.1.0"`); a versão tem de ser a da distribuição instalada. `[external-dependencies]` e repositórios Maven produzem um erro claro de "ainda não suportado".
+- Fora do M8: repositórios remotos, travessia de POMs, mediação de versões, precedência de repositórios, snapshots, exclusions, classifiers, mirrors, autenticação e transitivas arbitrárias. Pertencem a um milestone próprio de dependency management.
+
+### `dhole.lock` v1
+
+```text
+dhole-lock 1
+dhole <version>
+
+artifact <group>:<name>:<version>
+scope runtime|test
+sha256 <hex>
+```
+
+- Regista os artefactos exatos selecionados para a aplicação (runtime e ferramentas de teste), ordenados por scope e coordenadas; SHA-256 sobre os bytes reais; sem caminhos da máquina. O JAR da própria aplicação não é entrada do lock.
+- Versão (qual artefacto foi selecionado) e checksum (se os bytes coincidem) são verificações distintas: bytes diferentes para a mesma identidade falham o build; artefacto em falta falha o build; o lock nunca é reescrito silenciosamente.
+- O primeiro build gera o lock; os seguintes consomem-no e verificam-no. Uma mudança legítima da seleção exige um fluxo explícito (`--update-lock`). Uma distribuição instalada incompatível com o lock produz um diagnóstico acionável, nunca substituição silenciosa.
+- É estado gerado: commitado, não editado à mão, revisto como uma alteração de dependências. Requisitos futuros incompatíveis introduzem `dhole-lock 2` em vez de mudar a semântica da versão 1.
+
+### Empacotamento
+
+`dhole build` produz uma distribuição com JARs separados (sem fat JAR):
+
+```text
+build/distributions/<name>/
+├── bin/<name>, bin/<name>.cmd
+└── lib/<name>.jar + JARs de runtime do lock
+```
+
+- `lib/<name>.jar`: classes, recursos e metadata gerada da aplicação; `Main-Class` de `[build] main`; `Class-Path` para os JARs irmãos. `java -jar lib/<name>.jar` funciona; os scripts são o mecanismo preferido.
+- Os JARs de runtime são copiados byte a byte dos artefactos verificados do lock; nada é desempacotado nem reempacotado; sem caminhos absolutos, fontes ou diretórios temporários.
+- O JAR da aplicação é reprodutível (ordem de entradas determinística, timestamps normalizados).
+- A máquina de deployment precisa apenas de um Java runtime compatível; `javac` só é exigido em desenvolvimento.
+- Fora do M8: fat JAR, Docker, native image, imagens jlink, instaladores, WAR.
+
+### Motor de build
+
+O `dhole build` compila com a API `javax.tools` do JDK (in-process), invoca o metadata compiler com `-Adhole.application` a partir de `[build] main` e escreve `modules.idx` (MODULE_SYSTEM.md §29). Gradle é apenas a ferramenta interna deste repositório; não é contrato do utilizador.
