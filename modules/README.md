@@ -1,22 +1,22 @@
-# JRF Modules
+# Dhole Modules
 
-Esta pasta contém os módulos oficiais de runtime do Java Rest Framework.
+Esta pasta contém os módulos oficiais de runtime do Dhole Framework.
 
 Estrutura inicial:
 
-- `jrf-core` — application lifecycle, bootstrap e contratos centrais.
-- `jrf-config` — environment e configuração.
-- `jrf-di` — dependency graph e container.
-- `jrf-http` — abstrações HTTP.
-- `jrf-routing` — router e route definitions.
-- `jrf-web` — integração HTTP + routing + controllers.
-- `jrf-validation` — validation engine.
-- `jrf-serialization` — contratos de serialization.
-- `jrf-json` — implementação JSON oficial.
-- `jrf-security` — authentication/authorization/security.
-- `jrf-database` — database SPI.
-- `jrf-observability` — logs, metrics, tracing e health.
-- `jrf-plugin-api` — API pública para plugins.
-- `jrf-plugin-runtime` — runtime dos plugins.
-- `jrf-devtools` — `jrf dev`, watching e fast restart.
-- `jrf-testing` — testing utilities.
+- `dhole-core` — application lifecycle, bootstrap e contratos centrais.
+- `dhole-config` — environment e configuração.
+- `dhole-di` — dependency graph e container.
+- `dhole-http` — abstrações HTTP.
+- `dhole-routing` — router e route definitions.
+- `dhole-web` — integração HTTP + routing + controllers.
+- `dhole-validation` — validation engine.
+- `dhole-serialization` — contratos de serialization.
+- `dhole-json` — implementação JSON oficial.
+- `dhole-security` — authentication/authorization/security.
+- `dhole-database` — database SPI.
+- `dhole-observability` — logs, metrics, tracing e health.
+- `dhole-plugin-api` — API pública para plugins.
+- `dhole-plugin-runtime` — runtime dos plugins.
+- `dhole-devtools` — `dhole dev`, watching e fast restart.
+- `dhole-testing` — testing utilities.

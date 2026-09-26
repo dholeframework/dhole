@@ -4,7 +4,7 @@
 
 Testing deve ser uma funcionalidade de primeira classe.
 
-Uma aplicação JRF não deve precisar montar manualmente todo o framework para testes comuns.
+Uma aplicação Dhole não deve precisar montar manualmente todo o framework para testes comuns.
 
 ---
 
@@ -39,7 +39,7 @@ class PriceServiceTest {
 }
 ```
 
-JRF não interfere.
+Dhole não interfere.
 
 ---
 
@@ -161,15 +161,15 @@ Configuração de test não deve utilizar serviços reais por acidente sem opt-i
 ## 13. CLI
 
 ```bash
-jrf test
+dhole test
 ```
 
 Filtros previstos:
 
 ```bash
-jrf test UserApiTest
-jrf test --unit
-jrf test --integration
+dhole test UserApiTest
+dhole test --unit
+dhole test --integration
 ```
 
 ---
@@ -189,7 +189,7 @@ Não ativar paralelismo agressivo se comprometer determinismo.
 
 ## 15. Framework self-tests
 
-O próprio JRF deve ter:
+O próprio Dhole deve ter:
 
 - unit tests;
 - compatibility tests;

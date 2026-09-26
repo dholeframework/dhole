@@ -2,15 +2,15 @@
 
 ## 1. Estado
 
-O Plugin System é parte oficial da arquitetura JRF v0.1.
+O Plugin System é parte oficial da arquitetura Dhole v0.1.
 
 A API deve ser desenhada desde o início, mesmo que plugins públicos de terceiros sejam ativados apenas após estabilização suficiente.
 
 Módulos:
 
 ```text
-jrf-plugin-api
-jrf-plugin-runtime
+dhole-plugin-api
+dhole-plugin-runtime
 ```
 
 ---
@@ -20,17 +20,17 @@ jrf-plugin-runtime
 Permitir extensões como:
 
 ```text
-jrf-redis
-jrf-openapi
-jrf-kafka
-jrf-s3
-jrf-mail
-jrf-tuprel
+dhole-redis
+dhole-openapi
+dhole-kafka
+dhole-s3
+dhole-mail
+dhole-tuprel
 community integrations
 company-specific integrations
 ```
 
-sem alterar `jrf-core`.
+sem alterar `dhole-core`.
 
 ---
 
@@ -45,7 +45,7 @@ Não recebem acesso irrestrito a internals.
 ## 4. Interface conceptual
 
 ```java
-public interface JrfPlugin {
+public interface DholePlugin {
 
     default void configure(PluginContext context) {}
 
@@ -169,7 +169,7 @@ Plugin poderá adicionar endpoints técnicos, por exemplo:
 Isso deve ser visível em:
 
 ```bash
-jrf routes
+dhole routes
 ```
 
 A origem do plugin deve aparecer.
@@ -181,8 +181,8 @@ A origem do plugin deve aparecer.
 Plugin poderá contribuir comandos namespaced:
 
 ```bash
-jrf openapi generate
-jrf redis check
+dhole openapi generate
+dhole redis check
 ```
 
 Plugins não devem poder sobrescrever comandos core silenciosamente.
@@ -203,7 +203,7 @@ mail
 Visíveis em:
 
 ```bash
-jrf doctor
+dhole doctor
 ```
 
 e health endpoints configurados.
@@ -231,18 +231,18 @@ VAT number
 country-specific identifiers
 ```
 
-Sem modificar `jrf-validation`.
+Sem modificar `dhole-validation`.
 
 ---
 
 ## 15. Database adapters
 
-`jrf-tuprel` é um exemplo de plugin/adaptor oficial.
+`dhole-tuprel` é um exemplo de plugin/adaptor oficial.
 
 ```text
-JRF Database SPI
+Dhole Database SPI
        ↑
-jrf-tuprel
+dhole-tuprel
        ↓
 Tuprel
 ```
@@ -256,7 +256,7 @@ Cada plugin deve declarar:
 ```text
 name
 version
-JRF compatibility
+Dhole compatibility
 capabilities
 dependencies
 ```
@@ -274,8 +274,8 @@ Exemplo:
 ```text
 Plugin Compatibility Error
 
-jrf-openapi 2.0 requires JRF >= 1.4
-Project uses JRF 1.2
+dhole-openapi 2.0 requires Dhole >= 1.4
+Project uses Dhole 1.2
 ```
 
 ---
@@ -309,7 +309,7 @@ Por isso:
 Categorias:
 
 ```text
-JRF Core
+Dhole Core
 Official Plugins
 Community Plugins
 Private Plugins
@@ -321,7 +321,7 @@ Plugins oficiais seguem compatibility testing do projeto.
 
 ## 21. Registry
 
-Um registry JRF próprio é possibilidade futura.
+Um registry Dhole próprio é possibilidade futura.
 
 A v1 pode distribuir plugins através de Maven-compatible repositories enquanto a CLI oferece experiência simplificada.
 

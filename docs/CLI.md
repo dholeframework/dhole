@@ -2,12 +2,12 @@
 
 ## 1. Visão
 
-A CLI é parte central da experiência JRF.
+A CLI é parte central da experiência Dhole.
 
 Nome provisório:
 
 ```text
-jrf
+dhole
 ```
 
 ---
@@ -15,14 +15,14 @@ jrf
 ## 2. Criação
 
 ```bash
-jrf new shop
+dhole new shop
 ```
 
 Opções futuras:
 
 ```bash
-jrf new shop --api
-jrf new shop --database postgres
+dhole new shop --api
+dhole new shop --database postgres
 ```
 
 A geração inicial deve continuar pequena.
@@ -32,7 +32,7 @@ A geração inicial deve continuar pequena.
 ## 3. Development
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 Responsabilidades:
@@ -49,7 +49,7 @@ Responsabilidades:
 ## 4. Run
 
 ```bash
-jrf run
+dhole run
 ```
 
 Executa a aplicação sem tooling extra de development.
@@ -59,7 +59,7 @@ Executa a aplicação sem tooling extra de development.
 ## 5. Build
 
 ```bash
-jrf build
+dhole build
 ```
 
 Pipeline:
@@ -78,7 +78,7 @@ package
 ## 6. Test
 
 ```bash
-jrf test
+dhole test
 ```
 
 ---
@@ -86,11 +86,11 @@ jrf test
 ## 7. Dependency management
 
 ```bash
-jrf add redis
-jrf add org.jsoup:jsoup:VERSION
-jrf remove redis
-jrf update
-jrf dependencies
+dhole add redis
+dhole add org.jsoup:jsoup:VERSION
+dhole remove redis
+dhole update
+dhole dependencies
 ```
 
 ---
@@ -100,12 +100,12 @@ jrf dependencies
 Geradores não são obrigatórios, mas aceleram tarefas:
 
 ```bash
-jrf make controller User
-jrf make service User
-jrf make model User
-jrf make middleware AuthLog
-jrf make job SendWelcomeEmail
-jrf make test UserApi
+dhole make controller User
+dhole make service User
+dhole make model User
+dhole make middleware AuthLog
+dhole make job SendWelcomeEmail
+dhole make test UserApi
 ```
 
 Código gerado deve ser simples e editável.
@@ -115,7 +115,7 @@ Código gerado deve ser simples e editável.
 ## 9. Routes
 
 ```bash
-jrf routes
+dhole routes
 ```
 
 ```text
@@ -130,8 +130,8 @@ POST    /users        users.create UserController.create
 ## 10. Config
 
 ```bash
-jrf config
-jrf config check
+dhole config
+dhole config check
 ```
 
 Secrets mascarados.
@@ -141,11 +141,11 @@ Secrets mascarados.
 ## 11. Database
 
 ```bash
-jrf db migrate
-jrf db rollback
-jrf db status
-jrf db seed
-jrf db reset
+dhole db migrate
+dhole db rollback
+dhole db status
+dhole db seed
+dhole db reset
 ```
 
 Comandos destrutivos devem ter proteção.
@@ -155,13 +155,13 @@ Comandos destrutivos devem ter proteção.
 ## 12. Doctor
 
 ```bash
-jrf doctor
+dhole doctor
 ```
 
 Exemplo:
 
 ```text
-JRF Doctor
+Dhole Doctor
 
 Project
 ✓ manifest valid
@@ -190,7 +190,7 @@ No critical problems found.
 ## 13. Clean
 
 ```bash
-jrf clean
+dhole clean
 ```
 
 Remove outputs do build/cache seguro.
@@ -202,11 +202,11 @@ Nunca apagar dados de aplicação.
 ## 14. Info
 
 ```bash
-jrf info
+dhole info
 ```
 
 ```text
-JRF        0.1.0
+Dhole        0.1.0
 Java       21
 Project    shop
 Environment development
@@ -232,7 +232,7 @@ Regras:
 Exemplo:
 
 ```bash
-jrf db reset
+dhole db reset
 ```
 
 deve informar claramente que dados serão removidos.

@@ -1,9 +1,0 @@
-# Example only.
-# The final manifest format will be defined by BUILD_SYSTEM.md.
-
-[project]
-name = "java-rest-framework"
-version = "0.1.0"
-
-[jrf]
-specification = "0.1"

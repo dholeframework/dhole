@@ -4,12 +4,12 @@
 
 A configuração da aplicação é Java.
 
-O JRF não introduz uma linguagem paralela de configuração para runtime.
+O Dhole não introduz uma linguagem paralela de configuração para runtime.
 
 ```text
 Application configuration  -> Java
 Secrets / environment      -> environment variables / .env
-Project/build metadata     -> jrf.toml
+Project/build metadata     -> dhole.toml
 ```
 
 ---
@@ -27,9 +27,9 @@ Exemplo conceptual:
 ```java
 package shop.config;
 
-import jrf.config.SettingsBuilder;
+import org.dhole.config.SettingsBuilder;
 
-import static jrf.env.Env.*;
+import static org.dhole.env.Env.*;
 
 public final class Settings {
 
@@ -167,7 +167,7 @@ Nunca imprimir valor real de uma configuração marcada/identificada como secret
 CLI:
 
 ```bash
-jrf config
+dhole config
 ```
 
 Saída:
@@ -257,14 +257,14 @@ max = 10
 
 ---
 
-## 14. `jrf config`
+## 14. `dhole config`
 
 Comandos previstos:
 
 ```bash
-jrf config
-jrf config check
-jrf config get app.port
+dhole config
+dhole config check
+dhole config get app.port
 ```
 
 Secrets continuam mascarados.

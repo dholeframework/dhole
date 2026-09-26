@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-O JRF terá um build/dependency experience próprio para que o utilizador comum não precise de escrever `pom.xml` ou `build.gradle`.
+O Dhole terá um build/dependency experience próprio para que o utilizador comum não precise de escrever `pom.xml` ou `build.gradle`.
 
 Isso não significa abandonar o ecossistema Java.
 
@@ -11,13 +11,13 @@ Isso não significa abandonar o ecossistema Java.
 ## 2. Arquivos
 
 ```text
-jrf.toml
-jrf.lock
+dhole.toml
+dhole.lock
 ```
 
 ---
 
-## 3. `jrf.toml`
+## 3. `dhole.toml`
 
 Exemplo:
 
@@ -27,7 +27,7 @@ name = "shop"
 version = "0.1.0"
 java = "21"
 
-[jrf]
+[dhole]
 version = "0.1.0"
 
 [dependencies]
@@ -46,7 +46,7 @@ O formato exato pode mudar, mas responsabilidades permanecem.
 
 ---
 
-## 4. `jrf.lock`
+## 4. `dhole.lock`
 
 Guarda versões e checksums resolvidos.
 
@@ -63,17 +63,17 @@ Deve ser commitado em aplicações.
 
 ## 5. Maven ecosystem compatibility
 
-O JRF deve conseguir resolver artifacts publicados em repositórios Java.
+O Dhole deve conseguir resolver artifacts publicados em repositórios Java.
 
 CLI:
 
 ```bash
-jrf add org.jsoup:jsoup:VERSION
+dhole add org.jsoup:jsoup:VERSION
 ```
 
 O programador não precisa criar `pom.xml`.
 
-Internamente o build system pode reutilizar bibliotecas/protocolos existentes de resolução. O contrato público continua JRF.
+Internamente o build system pode reutilizar bibliotecas/protocolos existentes de resolução. O contrato público continua Dhole.
 
 ---
 
@@ -93,16 +93,16 @@ O resolver deve:
 ## 7. Dependency graph
 
 ```bash
-jrf dependencies
+dhole dependencies
 ```
 
 Exemplo:
 
 ```text
 shop
-├── jrf-web 0.1.0
+├── dhole-web 0.1.0
 │   └── ...
-├── jrf-database 0.1.0
+├── dhole-database 0.1.0
 └── org.jsoup:jsoup ...
 ```
 
@@ -136,9 +136,9 @@ Validate source layout
     ↓
 Compile Java
     ↓
-Analyze JRF components
+Analyze Dhole components
     ↓
-Generate JRF metadata
+Generate Dhole metadata
     ↓
 Compile generated sources if needed
     ↓
@@ -151,7 +151,7 @@ Package
 
 ## 10. Metadata generation
 
-O JRF compiler/tooling gera metadata para:
+O Dhole compiler/tooling gera metadata para:
 
 - controllers;
 - routes;
@@ -200,7 +200,7 @@ ou distribuição equivalente com launcher.
 Comando:
 
 ```bash
-jrf build
+dhole build
 ```
 
 A experiência deve ser simples independentemente do mecanismo interno.
@@ -210,7 +210,7 @@ A experiência deve ser simples independentemente do mecanismo interno.
 ## 13. Development mode
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 O watcher deteta alterações, recompila incrementalmente e reinicia/recarrega o mínimo necessário.
@@ -233,13 +233,13 @@ Dependências e outputs podem ser cacheados.
 Local previsto:
 
 ```text
-~/.jrf/
+~/.dhole/
 ```
 
 e:
 
 ```text
-project/.jrf/
+project/.dhole/
 ```
 
 O layout exato é interno.
@@ -251,7 +251,7 @@ O layout exato é interno.
 Quando dependências já estão em cache:
 
 ```bash
-jrf build --offline
+dhole build --offline
 ```
 
 pode ser suportado.
@@ -262,7 +262,7 @@ pode ser suportado.
 
 Maven Central ou repositórios compatíveis devem poder ser configurados.
 
-Private repositories devem suportar credentials via environment/secrets, nunca hard-coded em `jrf.toml`.
+Private repositories devem suportar credentials via environment/secrets, nunca hard-coded em `dhole.toml`.
 
 ---
 
@@ -283,17 +283,17 @@ Quando existir, deve ter:
 
 Projetos avançados podem precisar integração com tooling externo.
 
-O JRF deve considerar export/interop futura, mas o fluxo oficial permanece:
+O Dhole deve considerar export/interop futura, mas o fluxo oficial permanece:
 
 ```bash
-jrf build
+dhole build
 ```
 
 ---
 
 ## 19. Regra essencial
 
-> **No pom.xml for the normal JRF developer; no abandonment of the Java ecosystem.**
+> **No pom.xml for the normal Dhole developer; no abandonment of the Java ecosystem.**
 
 
 ---
@@ -303,8 +303,8 @@ jrf build
 A fase:
 
 ```text
-Analyze JRF components
-Generate JRF metadata
+Analyze Dhole components
+Generate Dhole metadata
 ```
 
 é detalhada em:
@@ -313,4 +313,4 @@ Generate JRF metadata
 METADATA_COMPILER.md
 ```
 
-O build system é responsável por invocar esta fase e integrar os seus diagnostics no output de `jrf build` e `jrf dev`.
+O build system é responsável por invocar esta fase e integrar os seus diagnostics no output de `dhole build` e `dhole dev`.

@@ -2,7 +2,7 @@
 
 ## Project
 
-Java Rest Framework (JRF)
+Dhole Framework
 
 ## Specification
 
@@ -19,7 +19,7 @@ M0 — Repository Foundation
 ## Current Slice
 
 ```text
-M0 foundation implemented and verified locally; CI run pending
+M0 foundation implemented and verified locally; project renamed to Dhole; CI run pending
 ```
 
 ## Status
@@ -39,22 +39,34 @@ M0 LOCALLY VERIFIED — waiting for first CI run on GitHub
 [x] Decide internal bootstrap build tool: Gradle (Kotlin DSL) + Gradle Wrapper 9.7.1
 [x] Define Java baseline for implementation: Java 21 (Gradle toolchain)
 [x] Configure root build: 22 projects registered in settings.gradle.kts
-[x] Shared conventions: build-logic/ plugin jrf.java-conventions
-[x] Configure checks: javac -Xlint:all -Werror, :jrf-core:verifyCoreIsolation
+[x] Shared conventions: build-logic/ plugin org.dhole.java-conventions
+[x] Configure checks: javac -Xlint:all -Werror, :dhole-core:verifyCoreIsolation
 [x] Configure test execution: JUnit Jupiter 6.1.3 (gradle/libs.versions.toml)
-[x] Smoke test: jrf.BuildInfrastructureSmokeTest (jrf-core, no runtime behavior)
+[x] Smoke test: org.dhole.BuildInfrastructureSmokeTest (dhole-core, no runtime behavior)
 [x] Configure CI: .github/workflows/build.yml (./gradlew build on Java 21)
-[x] Verify module dependency boundaries (jrf-core isolated; explicit project dependencies)
+[x] Verify module dependency boundaries (dhole-core isolated; explicit project dependencies)
 [x] Code conventions documented: docs/DEVELOPMENT.md
 [x] .gitignore / .gitattributes / .editorconfig updated for Gradle and wrapper scripts
+```
+
+### Project identity migration
+
+```text
+[x] Project renamed to Dhole Framework (namespace org.dhole, CLI dhole, domain dhole.org)
+[x] Directories and Gradle projects renamed jrf-* -> dhole-* (root project: dhole)
+[x] Convention plugin renamed to org.dhole.java-conventions
+[x] Java packages moved from jrf.* to org.dhole.*
+[x] Specification references updated: dhole.toml, dhole.lock, .dhole/, META-INF/dhole/, DHOLE- diagnostics
+[x] docs/REPOSITORY_STRUCTURE.md documents the internal Gradle build
+[x] .gitignore: source packages named "build" are no longer ignored; IDE bin/ output at project roots ignored
 ```
 
 Intentional project dependencies declared so far:
 
 ```text
-jrf-tuprel    -> api(jrf-database)
-hello-api     -> implementation(jrf-core)
-bookstore-api -> implementation(jrf-core)
+dhole-tuprel  -> api(dhole-database)
+hello-api     -> implementation(dhole-core)
+bookstore-api -> implementation(dhole-core)
 ```
 
 All modules other than the smoke test contain no source code yet.
@@ -80,7 +92,7 @@ None.
 ### M1 — Core Runtime
 
 ```text
-[ ] Jrf
+[ ] Dhole
 [ ] Application
 [ ] DefaultApplication
 [ ] ApplicationState
@@ -98,11 +110,13 @@ Do not start M1 until M0 acceptance criteria are satisfied.
 ## Tests
 
 ```text
-./gradlew build                                         PASSED (JDK 21.0.12, Windows 11)
-  jrf.BuildInfrastructureSmokeTest                      1 test, PASSED
-  :jrf-core:verifyCoreIsolation                         PASSED
-Negative check: temporary jrf-core -> jrf-http dependency  verifyCoreIsolation FAILED as expected
-Negative check: temporary failing JUnit test               :jrf-http:test FAILED as expected
+After rename to Dhole (JDK 21.0.12, Windows 11):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all --rerun-tasks
+                                                        BUILD SUCCESSFUL, 58 tasks executed, no deprecation warnings
+  org.dhole.BuildInfrastructureSmokeTest                1 test, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+Negative check: temporary dhole-core -> dhole-http dependency  verifyCoreIsolation FAILED as expected
+Negative check (M0): temporary failing JUnit test      test task FAILED as expected
 CI workflow                                             NOT EXECUTED — no Git remote configured
 ```
 
@@ -111,11 +125,11 @@ CI workflow                                             NOT EXECUTED — no Git 
 ## Known Issues
 
 ```text
-- docs/REPOSITORY_STRUCTURE.md ("Regra importante") still says not to add a build root;
-  superseded by the owner's Gradle decision. Needs owner-approved update.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
+- On this development machine, builds fail from host memory exhaustion while the VS Code Java
+  extension (language servers + its own Gradle daemons) is running; close it before building.
 ```
 
 ---
@@ -123,8 +137,6 @@ CI workflow                                             NOT EXECUTED — no Git 
 ## Architectural Decisions Requiring Future Confirmation
 
 ```text
-- final framework name
-- final Java package/group namespace
 - final minimum Java version for the first public release
 - automatic formatter (if any)
 ```
@@ -161,7 +173,7 @@ git status
 
 ```text
 1. Add the GitHub remote, push, and confirm the "build" workflow passes. This closes M0.
-2. Then start M1 — Core Runtime, Slice 1: jrf.application.ApplicationState in modules/jrf-core.
+2. Then start M1 — Core Runtime, Slice 1: org.dhole.application.ApplicationState in modules/dhole-core.
 ```
 
 Read before M1:

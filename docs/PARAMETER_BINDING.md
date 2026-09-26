@@ -18,7 +18,7 @@ O sistema deve ser simples nos casos comuns e explícito quando existe ambiguida
 
 ## 2. Sources
 
-O JRF reconhece conceptualmente:
+O Dhole reconhece conceptualmente:
 
 ```text
 PATH
@@ -98,7 +98,7 @@ gera:
 
 ## 5. Query Parameters
 
-Para poucos valores, o JRF pode suportar wrappers explícitos:
+Para poucos valores, o Dhole pode suportar wrappers explícitos:
 
 ```java
 List<User> search(
@@ -176,7 +176,7 @@ O Metadata Compiler pode inferir BODY quando:
 
 ## 8. Ambiguity Rule
 
-O JRF nunca deve adivinhar silenciosamente quando duas sources são plausíveis.
+O Dhole nunca deve adivinhar silenciosamente quando duas sources são plausíveis.
 
 Exemplo:
 
@@ -564,7 +564,7 @@ Structured records resolvem múltiplos campos.
 
 ## 29. GET Bodies
 
-O JRF não deve usar body em GET como convenção normal.
+O Dhole não deve usar body em GET como convenção normal.
 
 Se tecnicamente permitido, deve exigir API explícita.
 

@@ -32,7 +32,7 @@ public class PaymentService {}
 
 ## 2. No Annotation Soup
 
-Annotations não são proibidas em absoluto, mas não são o mecanismo principal do JRF.
+Annotations não são proibidas em absoluto, mas não são o mecanismo principal do Dhole.
 
 Uma annotation só deve existir quando:
 
@@ -154,10 +154,10 @@ Automação interna deve ser inspecionável.
 A CLI deve permitir:
 
 ```bash
-jrf routes
-jrf config
-jrf dependencies
-jrf doctor
+dhole routes
+dhole config
+dhole dependencies
+dhole doctor
 ```
 
 Uma decisão automática não deve tornar-se impossível de explicar.
@@ -204,11 +204,11 @@ Nenhum módulo deve obrigar dependências desnecessárias.
 Exemplo:
 
 ```text
-jrf-core
+dhole-core
    ↑
-jrf-web
+dhole-web
    ↑
-jrf-security
+dhole-security
 ```
 
 Database, mail, cache e outros módulos não devem ser obrigatórios numa aplicação que não os utiliza.
@@ -217,12 +217,12 @@ Database, mail, cache e outros módulos não devem ser obrigatórios numa aplica
 
 ## 12. Java Ecosystem Compatibility
 
-O JRF não cria uma ilha.
+O Dhole não cria uma ilha.
 
 Deve ser possível utilizar bibliotecas Java normais:
 
 ```bash
-jrf add org.jsoup:jsoup:VERSION
+dhole add org.jsoup:jsoup:VERSION
 ```
 
 O build system resolve dependências sem exigir que o programador escreva `pom.xml`.
@@ -262,7 +262,7 @@ Erro desejado:
 Dependency Error
 
 UserController requires UserService,
-but JRF could not construct UserService.
+but Dhole could not construct UserService.
 
 Constructor:
 UserService(UserRepository users)
@@ -286,8 +286,8 @@ Operações frequentes devem ter uma abordagem preferida:
 - routing: `Router`;
 - errors: framework error types/handler;
 - tests: `ApiTest`;
-- dependencies: `jrf add`;
-- build: `jrf build`.
+- dependencies: `dhole add`;
+- build: `dhole build`.
 
 Extensibilidade não deve destruir consistência.
 
@@ -306,7 +306,7 @@ Cache started
 HTTP initialization failed
 ```
 
-JRF deve tentar:
+Dhole deve tentar:
 
 ```text
 stop Cache

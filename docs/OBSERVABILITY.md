@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Observability é parte da arquitetura de produção do JRF.
+Observability é parte da arquitetura de produção do Dhole.
 
 O framework deve permitir compreender:
 
@@ -34,7 +34,7 @@ Diagnostics
 Planeado:
 
 ```text
-jrf-observability
+dhole-observability
 ```
 
 Core fornece hooks mínimos; o módulo oferece funcionalidades completas.
@@ -391,12 +391,12 @@ Logs têm detalhes completos.
 
 ---
 
-## 25. `jrf doctor`
+## 25. `dhole doctor`
 
 Observability/diagnostics alimentam:
 
 ```bash
-jrf doctor
+dhole doctor
 ```
 
 Checks:
@@ -412,10 +412,10 @@ dependency graph
 
 ---
 
-## 26. `jrf info`
+## 26. `dhole info`
 
 ```bash
-jrf info
+dhole info
 ```
 
 Pode mostrar:
@@ -423,7 +423,7 @@ Pode mostrar:
 ```text
 Application
 Version
-JRF version
+Dhole version
 Environment
 Modules
 Plugins
@@ -437,7 +437,7 @@ Java version
 Futuro:
 
 ```bash
-jrf inspect
+dhole inspect
 ```
 
 pode consultar processo local/management endpoint.
@@ -506,7 +506,7 @@ metadata duration
 restart duration
 ```
 
-Ajuda a otimizar `jrf dev`.
+Ajuda a otimizar `dhole dev`.
 
 ---
 
@@ -518,7 +518,7 @@ Plugin pode:
 register health check
 register metrics
 create trace spans
-log through JRF facade
+log through Dhole facade
 ```
 
 Sem substituir global logging silenciosamente.
@@ -573,6 +573,6 @@ restricted network
 
 ## 37. Resumo
 
-O JRF deve tornar aplicações fáceis de operar, não apenas fáceis de escrever.
+O Dhole deve tornar aplicações fáceis de operar, não apenas fáceis de escrever.
 
 > **If production cannot explain what the application is doing, the framework is incomplete.**

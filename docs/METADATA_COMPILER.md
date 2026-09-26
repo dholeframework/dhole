@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-O Metadata Compiler é uma das peças centrais do Java Rest Framework (JRF).
+O Metadata Compiler é uma das peças centrais do Dhole Framework.
 
 O seu objetivo é transferir o máximo possível de descoberta, validação e geração de informação do runtime para build-time.
 
@@ -52,7 +52,7 @@ e gerar metadata consumível pelo runtime.
 
 # 3. Não é um novo compilador Java
 
-O JRF não substitui `javac`.
+O Dhole não substitui `javac`.
 
 Pipeline:
 
@@ -61,7 +61,7 @@ Java source
     ↓
 javac
     ↓
-JRF metadata analysis
+Dhole metadata analysis
     ↓
 generated metadata
 ```
@@ -71,7 +71,7 @@ ou, quando tecnicamente útil:
 ```text
 Java source
     ↓
-JRF compiler integration
+Dhole compiler integration
     ↓
 javac + metadata generation
 ```
@@ -145,7 +145,7 @@ response:
 A análise começa a partir da classe passada a:
 
 ```java
-Jrf.run(App.class);
+Dhole.run(App.class);
 ```
 
 Exemplo:
@@ -267,7 +267,7 @@ Repository
 Database
 ```
 
-Classes nunca utilizadas não precisam ser componentes JRF.
+Classes nunca utilizadas não precisam ser componentes Dhole.
 
 Isto reduz:
 
@@ -293,7 +293,7 @@ plugin extension
 scheduled task
 ```
 
-Esses tipos usam contratos JRF específicos:
+Esses tipos usam contratos Dhole específicos:
 
 ```java
 implements Middleware
@@ -340,7 +340,7 @@ public UserService() {}
 public UserService(UserRepository users) {}
 ```
 
-o JRF não deve adivinhar silenciosamente.
+o Dhole não deve adivinhar silenciosamente.
 
 Erro:
 
@@ -349,7 +349,7 @@ Component Error
 
 UserService declares multiple constructors.
 
-JRF cannot determine which constructor should be used.
+Dhole cannot determine which constructor should be used.
 
 Declare one injectable constructor or configure a provider.
 ```
@@ -369,7 +369,7 @@ ComponentMetadata:
   constructor:
     parameters:
       - type = com.acme.UserRepository
-      - type = jrf.mail.Mail
+      - type = org.dhole.mail.Mail
 ```
 
 O runtime usa isso para construir o graph.
@@ -515,7 +515,7 @@ A regra é:
 Rotas altamente dinâmicas dificultam:
 
 - OpenAPI;
-- `jrf routes`;
+- `dhole routes`;
 - build-time validation;
 - conflict detection.
 
@@ -562,7 +562,7 @@ conversion supported
 
 O build deve preservar nomes de parâmetros necessários ao framework.
 
-O JRF build system deve configurar Java compilation de forma apropriada.
+O Dhole build system deve configurar Java compilation de forma apropriada.
 
 Se o mecanismo final não puder confiar em parameter names, metadata gerada resolve isso.
 
@@ -727,7 +727,7 @@ Um plugin deve publicar metadata:
 ```text
 plugin id
 plugin version
-JRF compatibility
+Dhole compatibility
 entry point
 provided modules
 provided settings
@@ -765,7 +765,7 @@ depends:
 Formato conceptual:
 
 ```text
-META-INF/jrf/
+META-INF/dhole/
 ```
 
 Possíveis ficheiros:
@@ -835,7 +835,7 @@ A decisão deve ser baseada em benchmark e simplicidade.
 Exemplo:
 
 ```java
-final class UserController_JrfMetadata {
+final class UserController_DholeMetadata {
 
     static final ComponentDefinition DEFINITION = ...;
 }
@@ -1025,13 +1025,13 @@ Para integração futura com IDE.
 
 # 41. Diagnostics codes
 
-Erros JRF podem ter códigos estáveis:
+Erros Dhole podem ter códigos estáveis:
 
 ```text
-JRF-DI-001
-JRF-ROUTE-003
-JRF-VAL-002
-JRF-SER-004
+DHOLE-DI-001
+DHOLE-ROUTE-003
+DHOLE-VAL-002
+DHOLE-SER-004
 ```
 
 Isso ajuda:
@@ -1051,7 +1051,7 @@ Nem tudo é erro.
 Exemplo:
 
 ```text
-JRF Warning JRF-WEB-011
+Dhole Warning DHOLE-WEB-011
 
 Route returns persistence entity User directly.
 
@@ -1074,7 +1074,7 @@ warningsAsErrors = true
 ou:
 
 ```bash
-jrf build --strict
+dhole build --strict
 ```
 
 ---
@@ -1084,11 +1084,11 @@ jrf build --strict
 Metadata alimenta:
 
 ```bash
-jrf routes
-jrf dependencies
-jrf config
-jrf doctor
-jrf info
+dhole routes
+dhole dependencies
+dhole config
+dhole doctor
+dhole info
 ```
 
 Sem precisar iniciar a aplicação em todos os casos.
@@ -1170,7 +1170,7 @@ Key conceptual:
 ```text
 source hash
 compiler version
-JRF metadata version
+Dhole metadata version
 relevant dependency versions
 ```
 
@@ -1217,7 +1217,7 @@ API keys
 Estrutura conceptual:
 
 ```text
-jrf-compiler/
+dhole-compiler/
 ├── discovery/
 ├── components/
 ├── dependencies/
@@ -1305,7 +1305,7 @@ Metadata Compatibility Error
 Application metadata version: 3
 Runtime supports: 2
 
-Rebuild the application using a compatible JRF build tool.
+Rebuild the application using a compatible Dhole build tool.
 ```
 
 ---
@@ -1315,7 +1315,7 @@ Rebuild the application using a compatible JRF build tool.
 Comando futuro:
 
 ```bash
-jrf metadata
+dhole metadata
 ```
 
 Pode mostrar:
@@ -1331,7 +1331,7 @@ Plugins      3
 Modo verbose:
 
 ```bash
-jrf metadata --component UserController
+dhole metadata --component UserController
 ```
 
 ---
@@ -1353,7 +1353,7 @@ jrf metadata --component UserController
 
 # 60. Resumo
 
-O Metadata Compiler é o mecanismo que permite ao JRF combinar:
+O Metadata Compiler é o mecanismo que permite ao Dhole combinar:
 
 ```text
 plain Java

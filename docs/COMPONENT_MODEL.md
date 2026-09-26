@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-O Component Model define o que é um componente JRF, como nasce, como é descoberto, como recebe dependências, como é destruído e como se relaciona com outros tipos da aplicação.
+O Component Model define o que é um componente Dhole, como nasce, como é descoberto, como recebe dependências, como é destruído e como se relaciona com outros tipos da aplicação.
 
 O objetivo é permitir:
 
@@ -25,7 +25,7 @@ para registrar tudo.
 
 # 2. O que é um componente
 
-Um componente é um objeto cujo lifecycle é controlado pelo JRF.
+Um componente é um objeto cujo lifecycle é controlado pelo Dhole.
 
 Exemplos:
 
@@ -123,7 +123,7 @@ UserService
 UserRepository
 ```
 
-`UserService` e `UserRepository` não precisam implementar interface JRF.
+`UserService` e `UserRepository` não precisam implementar interface Dhole.
 
 ---
 
@@ -351,7 +351,7 @@ PaymentGateway
 StripePaymentGateway
 ```
 
-o JRF pode inferir.
+o Dhole pode inferir.
 
 Se existirem várias:
 
@@ -730,7 +730,7 @@ Possibilidade útil:
 List<PaymentProvider> providers
 ```
 
-JRF pode injetar todas as implementações conhecidas.
+Dhole pode injetar todas as implementações conhecidas.
 
 Ordering deve ser explícito/determinístico.
 
@@ -748,7 +748,7 @@ context.bind(Cache.class)
 Origin metadata:
 
 ```text
-PLUGIN: jrf-redis
+PLUGIN: dhole-redis
 ```
 
 Se houver conflito:
@@ -758,8 +758,8 @@ Binding Conflict
 
 Cache has multiple providers:
 
-- MemoryCache [JRF Core]
-- RedisCache [jrf-redis]
+- MemoryCache [Dhole Core]
+- RedisCache [dhole-redis]
 
 Select a binding explicitly.
 ```
@@ -964,7 +964,7 @@ Essa separação ajuda:
 # 53. CLI dependency view
 
 ```bash
-jrf dependencies
+dhole dependencies
 ```
 
 Pode mostrar:
@@ -984,7 +984,7 @@ UserController
 Futuro:
 
 ```bash
-jrf component UserService
+dhole component UserService
 ```
 
 Saída:
@@ -1008,7 +1008,7 @@ Private constructors não são injectables.
 
 Package-private/public podem ser suportados conforme module accessibility.
 
-JRF deve respeitar regras Java, não quebrá-las com reflection agressiva.
+Dhole deve respeitar regras Java, não quebrá-las com reflection agressiva.
 
 ---
 
@@ -1058,7 +1058,7 @@ Reachability + semantics determina.
 
 # 61. Static state
 
-O JRF deve desencorajar service state global estático.
+O Dhole deve desencorajar service state global estático.
 
 Isto quebra:
 
@@ -1105,8 +1105,8 @@ Isso reduz reflection.
 Possibilidade:
 
 ```text
-UserService_JrfFactory
-UserController_JrfFactory
+UserService_DholeFactory
+UserController_DholeFactory
 ```
 
 A decisão pertence ao Metadata Compiler.
@@ -1134,7 +1134,7 @@ Reflection fallback pode existir de forma controlada.
 Exemplo:
 
 ```text
-Component Error JRF-DI-002
+Component Error DHOLE-DI-002
 
 Cannot create OrderService.
 
@@ -1156,7 +1156,7 @@ Declare an explicit binding in Settings.
 
 # 67. No hidden proxy by default
 
-O JRF não deve criar proxies invisíveis para:
+O Dhole não deve criar proxies invisíveis para:
 
 ```text
 transactions
@@ -1285,7 +1285,7 @@ Não devem manipular internals do container.
 
 # 76. Resumo
 
-O JRF Component Model pretende fazer isto:
+O Dhole Component Model pretende fazer isto:
 
 ```java
 public class UserService {

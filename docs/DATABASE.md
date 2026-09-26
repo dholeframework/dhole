@@ -2,7 +2,7 @@
 
 ## 1. Filosofia
 
-Database support é parte central de backend, mas o JRF não deve acoplar o core a um ORM específico.
+Database support é parte central de backend, mas o Dhole não deve acoplar o core a um ORM específico.
 
 ---
 
@@ -11,7 +11,7 @@ Database support é parte central de backend, mas o JRF não deve acoplar o core
 ```text
 Application
     ↓
-JRF Database API / SPI
+Dhole Database API / SPI
     ↓
 Official Tuprel Adapter
     ↓
@@ -30,9 +30,9 @@ Tuprel é o adaptador ORM oficial planeado.
 
 Regras:
 
-- `jrf-core` não depende de Tuprel;
+- `dhole-core` não depende de Tuprel;
 - integração vive num módulo separado;
-- Tuprel continua utilizável fora de JRF;
+- Tuprel continua utilizável fora de Dhole;
 - o framework pode suportar adapters adicionais.
 
 ---
@@ -101,9 +101,9 @@ Não assumir semanticamente que todo nesting cria nova transaction.
 CLI:
 
 ```bash
-jrf db migrate
-jrf db rollback
-jrf db status
+dhole db migrate
+dhole db rollback
+dhole db status
 ```
 
 Directório:
@@ -119,7 +119,7 @@ A geração automática através de Tuprel pode existir, mas migrations devem co
 ## 9. Seeds
 
 ```bash
-jrf db seed
+dhole db seed
 ```
 
 Seeds são Java:
@@ -140,7 +140,7 @@ public class DevelopmentSeeder implements Seeder {
 Comandos destrutivos devem exigir clareza:
 
 ```bash
-jrf db reset
+dhole db reset
 ```
 
 Em production, bloqueado por defeito.

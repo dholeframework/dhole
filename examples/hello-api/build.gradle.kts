@@ -1,7 +1,7 @@
 plugins {
-    id("jrf.java-conventions")
+    id("org.dhole.java-conventions")
 }
 
 dependencies {
-    implementation(project(":jrf-core"))
+    implementation(project(":dhole-core"))
 }

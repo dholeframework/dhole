@@ -2,18 +2,18 @@
 
 ## 1. Estado
 
-Serialization é uma capacidade oficial da arquitetura JRF v0.1.
+Serialization é uma capacidade oficial da arquitetura Dhole v0.1.
 
 Módulos:
 
 ```text
-jrf-serialization
-jrf-json
+dhole-serialization
+dhole-json
 ```
 
-`jrf-serialization` define contratos.
+`dhole-serialization` define contratos.
 
-`jrf-json` fornece a implementação JSON oficial.
+`dhole-json` fornece a implementação JSON oficial.
 
 ---
 
@@ -93,7 +93,7 @@ application/octet-stream -> BinarySerializer
 
 ## 5. JSON como default
 
-Para APIs JRF:
+Para APIs Dhole:
 
 ```text
 application/json
@@ -158,7 +158,7 @@ Optional<T>
 arrays
 ```
 
-Generics devem preservar type information sempre que o pipeline JRF a conhece.
+Generics devem preservar type information sempre que o pipeline Dhole a conhece.
 
 ---
 
@@ -281,12 +281,12 @@ Ou via plugin.
 A arquitetura permite:
 
 ```text
-jrf-jackson
-jrf-gson
+dhole-jackson
+dhole-gson
 custom serializer
 ```
 
-sem acoplar `jrf-http` diretamente a uma biblioteca.
+sem acoplar `dhole-http` diretamente a uma biblioteca.
 
 ---
 

@@ -1,13 +1,17 @@
-# Java Rest Framework (JRF) — Specification v0.1
+# Dhole Framework — Specification v0.1
+
+> **Modern Java backend development, simplified.**
 
 > **Estado:** Draft oficial de arquitetura  
 > **Idioma desta versão:** Português  
 > **Nomes técnicos:** Inglês  
-> **Nome do framework:** `Java Rest Framework` / `JRF` é um nome de trabalho e pode ser substituído antes da primeira versão pública.
+> **Website:** dhole.org  
+> **CLI:** `dhole`  
+> **Java namespace:** `org.dhole`
 
 ## 1. Objetivo
 
-O JRF é um framework completo para desenvolvimento backend em Java, pensado para oferecer uma experiência simples, produtiva e coerente sem retirar ao programador o poder da linguagem Java.
+O Dhole é um framework completo para desenvolvimento backend em Java, pensado para oferecer uma experiência simples, produtiva e coerente sem retirar ao programador o poder da linguagem Java.
 
 A ambição do projeto é aproximar a experiência de desenvolvimento de frameworks como Django da realidade Java:
 
@@ -25,7 +29,7 @@ A ambição do projeto é aproximar a experiência de desenvolvimento de framewo
 - build system próprio;
 - acesso ao ecossistema Java sem exigir `pom.xml` ao utilizador.
 
-O JRF **não pretende ser uma versão reduzida do Spring**. A proposta é repensar a experiência de desenvolvimento backend Java a partir de princípios mais simples.
+O Dhole **não pretende ser uma versão reduzida do Spring**. A proposta é repensar a experiência de desenvolvimento backend Java a partir de princípios mais simples.
 
 ---
 
@@ -35,7 +39,7 @@ A regra principal é:
 
 > **O programador deve escrever a lógica da aplicação. O framework deve remover o código cerimonial.**
 
-O JRF prefere Java normal a mecanismos mágicos.
+O Dhole prefere Java normal a mecanismos mágicos.
 
 ```java
 public class UserService {
@@ -88,15 +92,15 @@ Não são necessárias annotations como:
 Criar um projeto:
 
 ```bash
-jrf new shop
+dhole new shop
 cd shop
-jrf dev
+dhole dev
 ```
 
 Resultado esperado:
 
 ```text
-JRF 0.1
+Dhole 0.1
 
 Application   shop
 Environment   development
@@ -136,8 +140,8 @@ shop/
 ├── .env
 ├── .env.example
 ├── .gitignore
-├── jrf.toml
-└── jrf.lock
+├── dhole.toml
+└── dhole.lock
 ```
 
 Pastas vazias não precisam de existir. O projeto começa pequeno e cresce quando necessário.
@@ -149,12 +153,12 @@ Pastas vazias não precisam de existir. O projeto começa pequeno e cresce quand
 ```java
 package shop;
 
-import jrf.Jrf;
+import org.dhole.Dhole;
 
 public class App {
 
     public static void main(String[] args) {
-        Jrf.run(App.class);
+        Dhole.run(App.class);
     }
 }
 ```
@@ -164,8 +168,8 @@ Controller:
 ```java
 package shop.controllers;
 
-import jrf.web.Controller;
-import jrf.web.Router;
+import org.dhole.web.Controller;
+import org.dhole.web.Router;
 
 public class HelloController extends Controller {
 
@@ -185,10 +189,10 @@ O framework descobre controllers por metadata gerada durante o build, sem annota
 A arquitetura interna detalhada está em `docs/CORE_ARCHITECTURE.md`.
 
 ```text
-jrf dev / jrf run
+dhole dev / dhole run
         │
         ▼
-Read jrf.toml
+Read dhole.toml
         │
         ▼
 Resolve dependencies
@@ -261,24 +265,24 @@ O lifecycle deve ser observável através da CLI e dos logs. Automação é perm
 ## 8.1 Arquitetura modular inicial
 
 ```text
-jrf-core
-jrf-config
-jrf-di
-jrf-http
-jrf-routing
-jrf-web
-jrf-validation
-jrf-serialization
-jrf-json
-jrf-security
-jrf-database
-jrf-tuprel
-jrf-plugin-api
-jrf-plugin-runtime
-jrf-devtools
-jrf-testing
-jrf-build
-jrf-cli
+dhole-core
+dhole-config
+dhole-di
+dhole-http
+dhole-routing
+dhole-web
+dhole-validation
+dhole-serialization
+dhole-json
+dhole-security
+dhole-database
+dhole-tuprel
+dhole-plugin-api
+dhole-plugin-runtime
+dhole-devtools
+dhole-testing
+dhole-build
+dhole-cli
 ```
 
 Nem todos são dependências obrigatórias da aplicação. A divisão representa responsabilidades internas e fronteiras arquiteturais.
@@ -291,8 +295,8 @@ Nem todos são dependências obrigatórias da aplicação. A divisão representa
 - `.env` é suportado nativamente para desenvolvimento local.
 - Variáveis do sistema têm prioridade sobre `.env`.
 - `Settings.java` é a configuração principal da aplicação.
-- `jrf.toml` descreve projeto, build e dependências; não substitui `Settings.java`.
-- `jrf.lock` fixa versões resolvidas.
+- `dhole.toml` descreve projeto, build e dependências; não substitui `Settings.java`.
+- `dhole.lock` fixa versões resolvidas.
 - O utilizador não precisa de `pom.xml`.
 - Dependências do ecossistema Maven podem continuar a ser utilizadas.
 - Dependency injection usa construtores.
@@ -300,24 +304,24 @@ Nem todos são dependências obrigatórias da aplicação. A divisão representa
 - Controllers utilizam routing programático.
 - O framework gera metadata em build-time sempre que isso reduzir reflection e erros em runtime.
 - Componentes são descobertos por estrutura, reachability ou providers explícitos; não por annotations obrigatórias.
-- O Metadata Compiler não substitui `javac`; complementa o build com análise e metadata JRF.
+- O Metadata Compiler não substitui `javac`; complementa o build com análise e metadata Dhole.
 - Constructor injection é a forma oficial de DI; múltiplos constructors ambíguos causam erro.
 - Generated factories e metadata podem substituir reflection em caminhos críticos.
 - O request lifecycle é uma pipeline explícita: routing, middleware, security, binding, serialization, validation, handler e response.
 - Parameter binding infere apenas quando a source é inequívoca; casos ambíguos exigem binding explícito.
-- O JRF é synchronous-first e pode usar virtual threads/managed concurrency sem obrigar reactive programming.
+- O Dhole é synchronous-first e pode usar virtual threads/managed concurrency sem obrigar reactive programming.
 - Observability é parte da arquitetura de produção, com logs, metrics, traces, health e readiness.
 - Capabilities internas compõem-se através do Module System com dependency ordering e graceful shutdown.
 - `ApplicationContext` é recriável em development e representa o runtime da aplicação.
-- `jrf-core` coordena lifecycle e metadata, mas não depende de servidor HTTP, JSON library ou ORM concretos.
+- `dhole-core` coordena lifecycle e metadata, mas não depende de servidor HTTP, JSON library ou ORM concretos.
 - Plugins configuram extensões antes da construção final do dependency graph.
 - Startup parcial deve ser revertido quando uma fase crítica falha.
 - Validation é parte oficial da v1 e usa Rules<T> com referências type-safe sempre que possível.
 - Serialization possui contratos próprios e JSON oficial, sem acoplar HTTP a uma biblioteca concreta.
-- `jrf dev` fornece source watching e fast restart como primeira implementação de hot reload.
-- O Plugin System é parte da arquitetura desde v0.1, com `jrf-plugin-api` separado do runtime.
+- `dhole dev` fornece source watching e fast restart como primeira implementação de hot reload.
+- O Plugin System é parte da arquitetura desde v0.1, com `dhole-plugin-api` separado do runtime.
 - Persistência é modular.
-- Tuprel será o adaptador ORM oficial, mas não ficará acoplado ao `jrf-core`.
+- Tuprel será o adaptador ORM oficial, mas não ficará acoplado ao `dhole-core`.
 
 ---
 
@@ -325,8 +329,6 @@ Nem todos são dependências obrigatórias da aplicação. A divisão representa
 
 Estas decisões serão tratadas em versões seguintes da especificação:
 
-- nome definitivo do framework;
-- package namespace oficial;
 - versão mínima definitiva de Java antes do primeiro release;
 - formato final de migrations;
 - registry próprio versus resolução exclusiva de repositórios Java existentes;
@@ -372,8 +374,8 @@ A prioridade é qualidade da experiência, não quantidade de funcionalidades.
 A v1 será considerada bem-sucedida quando um programador Java conseguir:
 
 ```bash
-jrf new api
-jrf dev
+dhole new api
+dhole dev
 ```
 
 e construir uma API real com autenticação, base de dados, validação e testes sem precisar de dominar Maven, dezenas de annotations ou configuração extensa do framework.

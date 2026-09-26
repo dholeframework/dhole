@@ -11,9 +11,11 @@ replay_pid*
 .gradle/
 .kotlin/
 build/
+# Source packages named "build" (for example org.dhole.build) are not build output.
+!**/src/**/build/
 
-# JRF build/dev
-/.jrf/
+# Dhole build/dev
+/.dhole/
 /dist/
 
 # IDEs
@@ -24,6 +26,9 @@ out/
 .classpath
 .project
 .settings/
+# IDE compiler output at project roots (Eclipse, VS Code Java)
+/build-logic/bin/
+/*/*/bin/
 
 # OS
 .DS_Store

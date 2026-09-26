@@ -2,10 +2,10 @@
 
 ## Objetivo
 
-Este repositório é o monorepo inicial do Java Rest Framework.
+Este repositório é o monorepo inicial do Dhole Framework.
 
 ```text
-java-rest-framework/
+dhole/
 ├── README.md
 ├── docs/
 ├── modules/
@@ -24,7 +24,7 @@ A documentação em português é temporária; nomes públicos, ficheiros, packa
 
 ## `modules/`
 
-Runtime oficial do JRF.
+Runtime oficial do Dhole.
 
 ## `tools/`
 
@@ -34,16 +34,33 @@ Compiler, build system e CLI.
 
 Integrações oficiais independentes do core.
 
-`jrf-tuprel` será a integração oficial com Tuprel.
+`dhole-tuprel` será a integração oficial com Tuprel.
 
 ## `examples/`
 
 Aplicações usadas como specification tests e demonstrações.
 
-## Regra importante
+## Build interno do repositório
 
-Ainda não existe build file definitivo neste scaffold.
+O próprio repositório do Dhole é construído atualmente com **Gradle (Kotlin DSL)**, através do Gradle Wrapper incluído no repositório.
 
-Não adicionar `pom.xml`, `build.gradle` ou outro build root até o documento `IMPLEMENTATION_ROADMAP.md` fechar a estratégia de implementação interna.
+```text
+settings.gradle.kts        lista de projetos
+build-logic/               convention plugin partilhado (org.dhole.java-conventions)
+gradle/                    wrapper e version catalog
+<projeto>/build.gradle.kts dependências de cada projeto
+```
 
-O facto de aplicações JRF não precisarem de `pom.xml` não obriga o próprio repositório do framework a reinventar todo o bootstrap no primeiro commit. Essa decisão será tomada separadamente.
+Esta é uma decisão de implementação/bootstrap, usada apenas para desenvolver o Dhole.
+
+Não altera o objetivo do produto: aplicações Dhole serão construídas e executadas com:
+
+```bash
+dhole build
+dhole run
+dhole dev
+```
+
+sem que o developer da aplicação tenha de manter ficheiros de build Maven ou Gradle.
+
+Detalhes e comandos: `docs/DEVELOPMENT.md`.

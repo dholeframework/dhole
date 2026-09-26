@@ -11,13 +11,13 @@ A camada HTTP deve ser simples para casos comuns e permitir acesso de baixo nív
 A aplicação deve iniciar através de:
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 ou:
 
 ```bash
-jrf run
+dhole run
 ```
 
 Configuração:
@@ -33,7 +33,7 @@ settings.http(http -> http
 
 ## 3. Request
 
-O JRF oferece um tipo `Request` para acesso explícito:
+O Dhole oferece um tipo `Request` para acesso explícito:
 
 ```java
 Response inspect(Request request) {

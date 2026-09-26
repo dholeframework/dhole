@@ -9,9 +9,9 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "java-rest-framework"
+rootProject.name = "dhole"
 
-// Each project keeps its directory name as the project name (for example ":jrf-core").
+// Each project keeps its directory name as the project name (for example ":dhole-core").
 fun includeFrom(directory: String, vararg names: String) {
     for (name in names) {
         include(name)
@@ -21,34 +21,34 @@ fun includeFrom(directory: String, vararg names: String) {
 
 includeFrom(
     "modules",
-    "jrf-core",
-    "jrf-config",
-    "jrf-di",
-    "jrf-http",
-    "jrf-routing",
-    "jrf-web",
-    "jrf-validation",
-    "jrf-serialization",
-    "jrf-json",
-    "jrf-security",
-    "jrf-database",
-    "jrf-observability",
-    "jrf-plugin-api",
-    "jrf-plugin-runtime",
-    "jrf-devtools",
-    "jrf-testing",
+    "dhole-core",
+    "dhole-config",
+    "dhole-di",
+    "dhole-http",
+    "dhole-routing",
+    "dhole-web",
+    "dhole-validation",
+    "dhole-serialization",
+    "dhole-json",
+    "dhole-security",
+    "dhole-database",
+    "dhole-observability",
+    "dhole-plugin-api",
+    "dhole-plugin-runtime",
+    "dhole-devtools",
+    "dhole-testing",
 )
 
 includeFrom(
     "tools",
-    "jrf-compiler",
-    "jrf-build",
-    "jrf-cli",
+    "dhole-compiler",
+    "dhole-build",
+    "dhole-cli",
 )
 
 includeFrom(
     "integrations",
-    "jrf-tuprel",
+    "dhole-tuprel",
 )
 
 includeFrom(

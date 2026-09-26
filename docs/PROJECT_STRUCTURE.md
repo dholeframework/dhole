@@ -4,7 +4,7 @@
 
 A estrutura de projeto deve ser previsível sem ser rígida.
 
-O JRF define convenções, mas não obriga todas as pastas a existir.
+O Dhole define convenções, mas não obriga todas as pastas a existir.
 
 ---
 
@@ -37,8 +37,8 @@ my-app/
 ├── .env
 ├── .env.example
 ├── .gitignore
-├── jrf.toml
-└── jrf.lock
+├── dhole.toml
+└── dhole.lock
 ```
 
 ---
@@ -50,17 +50,17 @@ my-app/
 ```java
 package com.example.app;
 
-import jrf.Jrf;
+import org.dhole.Dhole;
 
 public class App {
 
     public static void main(String[] args) {
-        Jrf.run(App.class);
+        Dhole.run(App.class);
     }
 }
 ```
 
-A classe passada a `Jrf.run` define o root package da aplicação por defeito.
+A classe passada a `Dhole.run` define o root package da aplicação por defeito.
 
 ---
 
@@ -127,7 +127,7 @@ repositories/
 └── OrderRepository.java
 ```
 
-O JRF não obriga repository pattern em todos os projetos.
+O Dhole não obriga repository pattern em todos os projetos.
 
 ---
 
@@ -156,7 +156,7 @@ middleware/
 └── TenantResolver.java
 ```
 
-Security middleware oficial pode viver nos próprios módulos JRF.
+Security middleware oficial pode viver nos próprios módulos Dhole.
 
 ---
 
@@ -204,7 +204,7 @@ modules/
     └── Order.java
 ```
 
-O JRF deve suportar tanto organização por camada como organização por feature.
+O Dhole deve suportar tanto organização por camada como organização por feature.
 
 ---
 
@@ -266,7 +266,7 @@ Pode ser commitado.
 
 ---
 
-## 17. `jrf.toml`
+## 17. `dhole.toml`
 
 Manifesto do projeto.
 
@@ -276,14 +276,14 @@ Responsabilidades:
 
 - metadata;
 - Java target;
-- módulos JRF;
+- módulos Dhole;
 - dependências externas;
 - build;
 - repositories.
 
 ---
 
-## 18. `jrf.lock`
+## 18. `dhole.lock`
 
 Resultado determinístico da resolução de dependências.
 
@@ -293,7 +293,7 @@ Deve ser commitado em aplicações.
 
 ## 19. Descoberta de componentes
 
-O JRF evita depender exclusivamente de runtime classpath scanning.
+O Dhole evita depender exclusivamente de runtime classpath scanning.
 
 O build system cria metadata sobre componentes conhecidos.
 
@@ -316,10 +316,10 @@ hello/
 │   ├── App.java
 │   └── controllers/
 │       └── HelloController.java
-└── jrf.toml
+└── dhole.toml
 ```
 
-O JRF não deve obrigar ficheiros vazios.
+O Dhole não deve obrigar ficheiros vazios.
 
 
 ---
@@ -335,4 +335,4 @@ plugins/
 
 A maioria das aplicações não precisa desta pasta.
 
-Plugins externos continuam dependências declaradas no `jrf.toml`.
+Plugins externos continuam dependências declaradas no `dhole.toml`.

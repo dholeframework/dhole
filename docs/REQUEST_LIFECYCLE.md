@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define o caminho completo de um HTTP request dentro do JRF.
+Este documento define o caminho completo de um HTTP request dentro do Dhole.
 
 O lifecycle deve ser:
 
@@ -632,6 +632,6 @@ User create(CreateUser input) {
 }
 ```
 
-é possível porque o JRF executa uma pipeline organizada antes e depois desse método.
+é possível porque o Dhole executa uma pipeline organizada antes e depois desse método.
 
 > **Simple handler, explicit pipeline.**

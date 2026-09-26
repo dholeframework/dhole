@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-O JRF deve oferecer um modelo de concorrência simples para o developer e seguro para produção.
+O Dhole deve oferecer um modelo de concorrência simples para o developer e seguro para produção.
 
 A filosofia é:
 
@@ -81,7 +81,7 @@ public class CounterService {
 }
 ```
 
-JRF não torna isso seguro automaticamente.
+Dhole não torna isso seguro automaticamente.
 
 O tooling pode alertar alguns padrões, mas thread safety continua responsabilidade do código.
 
@@ -269,8 +269,8 @@ Owner deve parar recursos no shutdown.
 Threads/platform helpers devem ter nomes diagnósticos:
 
 ```text
-jrf-scheduler-1
-jrf-jobs-3
+dhole-scheduler-1
+dhole-jobs-3
 ```
 
 Virtual threads podem seguir naming/tracing equivalente quando útil.
@@ -320,7 +320,7 @@ tenant
 
 pode precisar de propagation para managed tasks.
 
-JRF não deve depender exclusivamente de `ThreadLocal` sem estratégia clara.
+Dhole não deve depender exclusivamente de `ThreadLocal` sem estratégia clara.
 
 ---
 
@@ -349,7 +349,7 @@ Não criar APIs próprias incompatíveis desnecessariamente.
 
 Bibliotecas reactive poderão ser usadas através de adapters/plugins.
 
-JRF core não será reactive-first.
+Dhole core não será reactive-first.
 
 ---
 
@@ -460,7 +460,7 @@ Scheduler/test clock também ajuda.
 
 ## 32. Invariants
 
-1. JRF não exige reactive programming;
+1. Dhole não exige reactive programming;
 2. request handlers podem escrever Java síncrono normal;
 3. framework-owned concurrency é gerida pelo lifecycle;
 4. raw threads são desencorajadas;

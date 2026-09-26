@@ -191,7 +191,7 @@ A API final de distinção entre body/query/path será validada em implementaç�
 O build gera metadata para permitir:
 
 ```bash
-jrf routes
+dhole routes
 ```
 
 Exemplo:

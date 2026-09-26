@@ -2,15 +2,15 @@
 
 ## 1. Visão
 
-O Java Rest Framework (JRF) pretende tornar o desenvolvimento backend em Java simples o suficiente para um iniciante começar rapidamente e poderoso o suficiente para uma aplicação crescer sem obrigar a migração para outro framework.
+O Dhole Framework pretende tornar o desenvolvimento backend em Java simples o suficiente para um iniciante começar rapidamente e poderoso o suficiente para uma aplicação crescer sem obrigar a migração para outro framework.
 
-O JRF inspira-se na produtividade de frameworks "batteries included", mas mantém Java como linguagem principal em todas as camadas da aplicação.
+O Dhole inspira-se na produtividade de frameworks "batteries included", mas mantém Java como linguagem principal em todas as camadas da aplicação.
 
 Não pretende esconder Java. Pretende remover cerimónia.
 
 ---
 
-## 2. Problema que o JRF procura resolver
+## 2. Problema que o Dhole procura resolver
 
 O desenvolvimento backend em Java pode exigir que o programador compreenda demasiados conceitos antes de criar funcionalidades simples:
 
@@ -28,16 +28,16 @@ O desenvolvimento backend em Java pode exigir que o programador compreenda demas
 
 O problema não é falta de poder. Java possui um ecossistema extremamente poderoso.
 
-O problema que o JRF ataca é a **fricção entre esse poder e a experiência do programador**.
+O problema que o Dhole ataca é a **fricção entre esse poder e a experiência do programador**.
 
 ---
 
 ## 3. Proposta
 
-O JRF oferece uma plataforma backend integrada:
+O Dhole oferece uma plataforma backend integrada:
 
 ```text
-JRF
+Dhole
 ├── Core
 ├── Configuration
 ├── Dependency Injection
@@ -105,7 +105,7 @@ Devem beneficiar de:
 
 ## 5. Proposta de valor
 
-O JRF não tenta competir através da frase "faz tudo automaticamente".
+O Dhole não tenta competir através da frase "faz tudo automaticamente".
 
 A proposta é:
 
@@ -162,7 +162,7 @@ Dependency graph resolved
    ↓
 Source code compiled
    ↓
-JRF metadata generated
+Dhole metadata generated
    ↓
 Application launched
 ```
@@ -261,7 +261,7 @@ A arquitetura cresce conforme a necessidade.
 
 ## 8. Relação com Java
 
-O JRF considera Java um ativo, não um problema.
+O Dhole considera Java um ativo, não um problema.
 
 Por isso preserva:
 
@@ -284,10 +284,10 @@ Por isso preserva:
 
 Tuprel é um projeto independente de ORM/persistência.
 
-O JRF terá uma integração oficial com Tuprel, mas respeitará esta separação:
+O Dhole terá uma integração oficial com Tuprel, mas respeitará esta separação:
 
 ```text
-JRF Core
+Dhole Core
    │
    ├── Database SPI
    │       │
@@ -299,8 +299,8 @@ JRF Core
 
 Consequências:
 
-- Tuprel pode ser utilizado sem JRF.
-- JRF pode teoricamente suportar outra persistência.
+- Tuprel pode ser utilizado sem Dhole.
+- Dhole pode teoricamente suportar outra persistência.
 - evolução de um projeto não obriga acoplamento interno do outro.
 
 ---
@@ -324,7 +324,7 @@ Sempre que houver duas alternativas, o projeto deve perguntar:
 
 ## 11. Não objetivos
 
-Na v0.1/v1, o JRF não precisa de ser:
+Na v0.1/v1, o Dhole não precisa de ser:
 
 - framework de frontend;
 - framework mobile;
@@ -349,4 +349,4 @@ O lifecycle, bootstrap, `Application`, `ApplicationContext`, metadata, module sy
 CORE_ARCHITECTURE.md
 ```
 
-Este documento deve ser tratado como a referência principal para a arquitetura interna do runtime JRF.
+Este documento deve ser tratado como a referência principal para a arquitetura interna do runtime Dhole.

@@ -1,7 +1,7 @@
-# JRF Tooling
+# Dhole Tooling
 
-Ferramentas usadas para construir e operar projetos JRF.
+Ferramentas usadas para construir e operar projetos Dhole.
 
-- `jrf-compiler` — Metadata Compiler.
-- `jrf-build` — build/dependency orchestration.
-- `jrf-cli` — comando `jrf`.
+- `dhole-compiler` — Metadata Compiler.
+- `dhole-build` — build/dependency orchestration.
+- `dhole-cli` — comando `dhole`.

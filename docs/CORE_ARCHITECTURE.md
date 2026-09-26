@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define a arquitetura interna base do Java Rest Framework (JRF).
+Este documento define a arquitetura interna base do Dhole Framework.
 
 A finalidade é estabelecer, antes da implementação, como o framework deve:
 
@@ -19,7 +19,7 @@ A finalidade é estabelecer, antes da implementação, como o framework deve:
 - executar shutdown;
 - funcionar em development mode.
 
-Este documento é a planta principal do `jrf-core`.
+Este documento é a planta principal do `dhole-core`.
 
 ---
 
@@ -38,7 +38,7 @@ O developer vê:
 public class App {
 
     public static void main(String[] args) {
-        Jrf.run(App.class);
+        Dhole.run(App.class);
     }
 }
 ```
@@ -50,7 +50,7 @@ Por dentro, o framework executa um lifecycle explícito e previsível.
 ## 3. Visão geral
 
 ```text
-Jrf.run(App.class)
+Dhole.run(App.class)
         │
         ▼
 Bootstrap
@@ -90,7 +90,7 @@ Application Ready
 A arquitetura inicial terá estes conceitos:
 
 ```text
-Jrf
+Dhole
 Application
 ApplicationBuilder
 ApplicationContext
@@ -111,14 +111,14 @@ Nem todos precisam de ser classes públicas.
 
 ---
 
-# 5. `Jrf`
+# 5. `Dhole`
 
-`Jrf` é a porta de entrada pública.
+`Dhole` é a porta de entrada pública.
 
 Exemplo:
 
 ```java
-Jrf.run(App.class);
+Dhole.run(App.class);
 ```
 
 Responsabilidade:
@@ -133,12 +133,12 @@ construir Application
 executar lifecycle
 ```
 
-`Jrf` não deve conter toda a lógica do framework.
+`Dhole` não deve conter toda a lógica do framework.
 
 API conceptual:
 
 ```java
-public final class Jrf {
+public final class Dhole {
 
     public static void run(Class<?> applicationClass) {
         Application application =
@@ -154,7 +154,7 @@ public final class Jrf {
 
 # 6. `Application`
 
-`Application` representa uma instância JRF em execução.
+`Application` representa uma instância Dhole em execução.
 
 Responsabilidades:
 
@@ -251,7 +251,7 @@ O bootstrap não inicia imediatamente o HTTP server até a aplicação estar val
 Ao executar:
 
 ```java
-Jrf.run(App.class);
+Dhole.run(App.class);
 ```
 
 o package de `App` define por defeito o application root.
@@ -340,19 +340,19 @@ Em dev mode, alteração de configuração provoca restart do context.
 
 # 12. Generated Metadata
 
-O JRF não deve depender principalmente de reflection/classpath scanning em runtime.
+O Dhole não deve depender principalmente de reflection/classpath scanning em runtime.
 
 O build gera metadata.
 
 Possíveis artefactos internos:
 
 ```text
-META-INF/jrf/application.idx
-META-INF/jrf/components.idx
-META-INF/jrf/routes.idx
-META-INF/jrf/validation.idx
-META-INF/jrf/serialization.idx
-META-INF/jrf/plugins.idx
+META-INF/dhole/application.idx
+META-INF/dhole/components.idx
+META-INF/dhole/routes.idx
+META-INF/dhole/validation.idx
+META-INF/dhole/serialization.idx
+META-INF/dhole/plugins.idx
 ```
 
 O formato concreto pode ser binário ou textual.
@@ -384,7 +384,7 @@ Objetivos:
 - acelerar startup;
 - permitir diagnostics;
 - detetar problemas em build-time;
-- suportar `jrf routes`;
+- suportar `dhole routes`;
 - suportar serialization/validation.
 
 ---
@@ -520,7 +520,7 @@ A -> B -> C -> A
 
 é erro.
 
-O JRF não deve resolver ciclos através de proxies invisíveis por defeito.
+O Dhole não deve resolver ciclos através de proxies invisíveis por defeito.
 
 Erro:
 
@@ -643,7 +643,7 @@ LauncherContext
 Isso permite:
 
 ```text
-jrf dev process
+dhole dev process
      │
      ├── app context #1
      │      ↓ stop
@@ -676,7 +676,7 @@ TestingModule
 Contrato conceptual:
 
 ```java
-public interface JrfModule {
+public interface DholeModule {
 
     void configure(ModuleContext context);
 
@@ -692,7 +692,7 @@ O contrato definitivo poderá separar interfaces.
 
 # 24. Core vs modules
 
-`jrf-core` conhece:
+`dhole-core` conhece:
 
 ```text
 module lifecycle
@@ -791,7 +791,7 @@ Um plugin normalmente contribui módulos/bindings/settings.
 Exemplo:
 
 ```text
-jrf-tuprel plugin
+dhole-tuprel plugin
       ↓
 TuprelDatabaseModule
 ```
@@ -805,7 +805,7 @@ Não duplicar lifecycle desnecessariamente.
 Bootstrap:
 
 ```text
-jrf.toml
+dhole.toml
     ↓
 resolved plugin dependencies
     ↓
@@ -1029,7 +1029,7 @@ Erros fatais da JVM não devem ser tratados como business errors arbitrariamente
 
 # 37. Server abstraction
 
-`jrf-web` não deve depender publicamente de um servidor concreto.
+`dhole-web` não deve depender publicamente de um servidor concreto.
 
 SPI:
 
@@ -1104,7 +1104,7 @@ Falha pode impedir readiness dependendo da policy.
 
 # 41. Shutdown hook
 
-JRF registra shutdown hook da JVM.
+Dhole registra shutdown hook da JVM.
 
 Fluxo:
 
@@ -1167,7 +1167,7 @@ public interface ManagedResource {
 }
 ```
 
-O JRF deve integrar adequadamente `AutoCloseable`.
+O Dhole deve integrar adequadamente `AutoCloseable`.
 
 Exemplo:
 
@@ -1191,7 +1191,7 @@ start module 4 ✓
 start module 5 ✗
 ```
 
-JRF executa rollback:
+Dhole executa rollback:
 
 ```text
 stop module 4
@@ -1210,7 +1210,7 @@ FAILED
 
 # 45. Development architecture
 
-`jrf dev` utiliza:
+`dhole dev` utiliza:
 
 ```text
 CLI Process
@@ -1246,7 +1246,7 @@ A implementação de dev mode deve permitir descarregar application classes quan
 Arquitetura possível:
 
 ```text
-JRF CLI / DevTools ClassLoader
+Dhole CLI / DevTools ClassLoader
             │
             └── Application ClassLoader
                     │
@@ -1303,7 +1303,7 @@ O framework poderá usar virtual threads onde adequado.
 
 A arquitetura pública não assume que cada módulo usa o mesmo executor.
 
-O JRF pode disponibilizar um `TaskExecutor` gerido.
+O Dhole pode disponibilizar um `TaskExecutor` gerido.
 
 ---
 
@@ -1347,9 +1347,9 @@ Não usar o mesmo mecanismo indiscriminadamente.
 Packages conceptuais:
 
 ```text
-jrf.api.*
-jrf.spi.*
-jrf.internal.*
+org.dhole.api.*
+org.dhole.spi.*
+org.dhole.internal.*
 ```
 
 ou equivalente.
@@ -1357,7 +1357,7 @@ ou equivalente.
 Regra:
 
 ```text
-jrf.internal.*
+org.dhole.internal.*
 ```
 
 não possui compatibility guarantees.
@@ -1392,7 +1392,7 @@ Build e runtime incompatíveis devem falhar claramente.
 Em development:
 
 ```text
-JRF Startup
+Dhole Startup
 
 Environment        development
 Components         32
@@ -1427,12 +1427,12 @@ Detalhes podem ser estruturados nos logs.
 
 ---
 
-# 56. `jrf doctor` integration
+# 56. `dhole doctor` integration
 
 Core architecture expõe diagnostics para:
 
 ```bash
-jrf doctor
+dhole doctor
 ```
 
 Checks:
@@ -1456,7 +1456,7 @@ Exemplo conceptual:
 
 ```java
 TestApplication app =
-    JrfTest.start(App.class);
+    DholeTest.start(App.class);
 ```
 
 HTTP tests podem usar transport in-memory quando possível.
@@ -1470,7 +1470,7 @@ Isso acelera testes.
 Possibilidade futura:
 
 ```java
-Application app = Jrf.application(App.class)
+Application app = Dhole.application(App.class)
     .port(0)
     .build();
 
@@ -1492,9 +1492,9 @@ Não é prioridade da v1 pública.
 Estrutura interna inicial:
 
 ```text
-jrf-core/
-└── src/main/java/jrf/
-    ├── Jrf.java
+dhole-core/
+└── src/main/java/org/dhole/
+    ├── Dhole.java
     ├── application/
     │   ├── Application.java
     │   ├── DefaultApplication.java
@@ -1525,7 +1525,7 @@ jrf-core/
     │   └── ...
     │
     └── modules/
-        ├── JrfModule.java
+        ├── DholeModule.java
         ├── ModuleRegistry.java
         └── ...
 ```
@@ -1539,7 +1539,7 @@ Esta estrutura é conceptual e pode evoluir durante a implementação.
 Versão consolidada:
 
 ```text
-Jrf.run(App.class)
+Dhole.run(App.class)
         ↓
 Bootstrap.create()
         ↓
@@ -1557,7 +1557,7 @@ discover declared Plugins
         ↓
 plugins.configure()
         ↓
-register JRF Modules
+register Dhole Modules
         ↓
 build ComponentRegistry
         ↓
@@ -1668,9 +1668,9 @@ state = STOPPED
 
 Estas regras não devem ser quebradas sem nova decisão formal:
 
-1. `jrf-core` não depende de Tuprel.
-2. `jrf-core` não depende de servidor HTTP concreto.
-3. `jrf-core` não depende de JSON library concreta.
+1. `dhole-core` não depende de Tuprel.
+2. `dhole-core` não depende de servidor HTTP concreto.
+3. `dhole-core` não depende de JSON library concreta.
 4. plugin configuration ocorre antes do dependency graph final.
 5. HTTP server abre apenas após validation de startup.
 6. routes são explicitamente registadas.
@@ -1723,7 +1723,7 @@ CONCURRENCY.md            ✓
 
 ## 66. Resumo
 
-O JRF é simples na superfície porque a complexidade fica organizada internamente.
+O Dhole é simples na superfície porque a complexidade fica organizada internamente.
 
 A arquitetura base é:
 

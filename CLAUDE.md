@@ -4,7 +4,7 @@
 
 ## Project
 
-Java Rest Framework (JRF)
+Dhole Framework
 
 This repository is developed from the architecture and implementation specifications stored in `docs/`.
 
@@ -388,9 +388,9 @@ In particular:
 
 - do not introduce annotation-driven DI;
 - do not introduce annotation-driven routing as the main API;
-- do not couple `jrf-core` to Tuprel;
-- do not couple `jrf-core` to a concrete HTTP server;
-- do not couple `jrf-http` to a concrete JSON library;
+- do not couple `dhole-core` to Tuprel;
+- do not couple `dhole-core` to a concrete HTTP server;
+- do not couple `dhole-http` to a concrete JSON library;
 - do not make runtime classpath scanning the primary discovery mechanism;
 - do not add invisible AOP/proxy behavior as a shortcut;
 - do not replace explicit transaction APIs with hidden proxies.
@@ -401,9 +401,9 @@ In particular:
 
 Before adding an external dependency:
 
-1. determine whether Java/JRF already provides the required capability;
+1. determine whether Java/Dhole already provides the required capability;
 2. verify that the dependency solves a real current problem;
-3. keep it behind a JRF abstraction when appropriate;
+3. keep it behind a Dhole abstraction when appropriate;
 4. avoid leaking third-party types into stable public APIs without deliberate approval.
 
 Do not add dependencies for convenience alone.

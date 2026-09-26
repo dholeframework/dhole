@@ -2,7 +2,7 @@
 
 ## 1. Filosofia
 
-Dependency Injection no JRF deve parecer construção normal de objetos Java.
+Dependency Injection no Dhole deve parecer construção normal de objetos Java.
 
 Mecanismo principal:
 
@@ -218,7 +218,7 @@ A API definitiva poderá ser refinada.
 Evitar:
 
 ```java
-Jrf.get(UserService.class)
+Dhole.get(UserService.class)
 ```
 
 na lógica normal.

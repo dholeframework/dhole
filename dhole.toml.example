@@ -1,0 +1,9 @@
+# Example only.
+# The final manifest format will be defined by BUILD_SYSTEM.md.
+
+[project]
+name = "dhole"
+version = "0.1.0"
+
+[dhole]
+specification = "0.1"

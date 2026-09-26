@@ -2,9 +2,9 @@
 
 ## 1. Objetivo
 
-O Module System define como capacidades oficiais e extensões do Java Rest Framework (JRF) são agrupadas, registadas, ordenadas, iniciadas e encerradas.
+O Module System define como capacidades oficiais e extensões do Dhole Framework são agrupadas, registadas, ordenadas, iniciadas e encerradas.
 
-O JRF não deve tornar-se um monólito onde todos os recursos estão sempre carregados.
+O Dhole não deve tornar-se um monólito onde todos os recursos estão sempre carregados.
 
 A arquitetura pretendida é:
 
@@ -20,7 +20,7 @@ plugins
 
 ## 2. O que é um Module
 
-Um `JrfModule` representa uma capacidade técnica do framework.
+Um `DholeModule` representa uma capacidade técnica do framework.
 
 Exemplos:
 
@@ -52,7 +52,7 @@ Um módulo pode:
 
 ```text
 Module
-    = capacidade interna/runtime do JRF
+    = capacidade interna/runtime do Dhole
 
 Plugin
     = pacote distribuído separadamente que pode contribuir módulos
@@ -61,7 +61,7 @@ Plugin
 Exemplo:
 
 ```text
-jrf-tuprel
+dhole-tuprel
     ↓
 TuprelPlugin
     ↓
@@ -73,7 +73,7 @@ TuprelDatabaseModule
 ## 4. Contrato conceptual
 
 ```java
-public interface JrfModule {
+public interface DholeModule {
 
     String id();
 
@@ -115,7 +115,7 @@ IDs são usados em:
 - dependency graph;
 - diagnostics;
 - plugin metadata;
-- `jrf doctor`;
+- `dhole doctor`;
 - compatibility checks.
 
 ---
@@ -139,7 +139,7 @@ security-web
 ```
 
 ```text
-jrf-tuprel
+dhole-tuprel
   requires:
     - database
 ```
@@ -148,7 +148,7 @@ jrf-tuprel
 
 ## 7. Ordering
 
-O JRF constrói um directed acyclic graph.
+O Dhole constrói um directed acyclic graph.
 
 ```text
 serialization
@@ -424,19 +424,19 @@ public SPI
 Primeiro conjunto planeado:
 
 ```text
-jrf-core
-jrf-config
-jrf-di
-jrf-routing
-jrf-http
-jrf-web
-jrf-validation
-jrf-serialization
-jrf-json
-jrf-security
-jrf-database
-jrf-observability
-jrf-testing
+dhole-core
+dhole-config
+dhole-di
+dhole-routing
+dhole-http
+dhole-web
+dhole-validation
+dhole-serialization
+dhole-json
+dhole-security
+dhole-database
+dhole-observability
+dhole-testing
 ```
 
 ---
@@ -446,7 +446,7 @@ jrf-testing
 Exemplo:
 
 ```text
-jrf-devtools
+dhole-devtools
 ```
 
 Não entram em production por defeito.
@@ -458,7 +458,7 @@ Não entram em production por defeito.
 Exemplo:
 
 ```text
-jrf-testing
+dhole-testing
 ```
 
 Pode contribuir:
@@ -475,7 +475,7 @@ Pode contribuir:
 CLI futura:
 
 ```bash
-jrf modules
+dhole modules
 ```
 
 Saída:
@@ -507,7 +507,7 @@ tuprel           running    plugin
 
 ## 28. Resumo
 
-O Module System permite ao JRF crescer sem transformar o framework num monólito.
+O Module System permite ao Dhole crescer sem transformar o framework num monólito.
 
 A regra é:
 

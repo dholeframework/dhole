@@ -1,29 +1,29 @@
-java-rest-framework/
+dhole/
 ├── README.md
 ├── docs/                     # Specification v0.1
 ├── modules/                  # Runtime modules
-│   ├── jrf-core/
-│   ├── jrf-config/
-│   ├── jrf-di/
-│   ├── jrf-http/
-│   ├── jrf-routing/
-│   ├── jrf-web/
-│   ├── jrf-validation/
-│   ├── jrf-serialization/
-│   ├── jrf-json/
-│   ├── jrf-security/
-│   ├── jrf-database/
-│   ├── jrf-observability/
-│   ├── jrf-plugin-api/
-│   ├── jrf-plugin-runtime/
-│   ├── jrf-devtools/
-│   └── jrf-testing/
+│   ├── dhole-core/
+│   ├── dhole-config/
+│   ├── dhole-di/
+│   ├── dhole-http/
+│   ├── dhole-routing/
+│   ├── dhole-web/
+│   ├── dhole-validation/
+│   ├── dhole-serialization/
+│   ├── dhole-json/
+│   ├── dhole-security/
+│   ├── dhole-database/
+│   ├── dhole-observability/
+│   ├── dhole-plugin-api/
+│   ├── dhole-plugin-runtime/
+│   ├── dhole-devtools/
+│   └── dhole-testing/
 ├── tools/
-│   ├── jrf-compiler/
-│   ├── jrf-build/
-│   └── jrf-cli/
+│   ├── dhole-compiler/
+│   ├── dhole-build/
+│   └── dhole-cli/
 ├── integrations/
-│   └── jrf-tuprel/
+│   └── dhole-tuprel/
 ├── examples/
 │   ├── hello-api/
 │   └── bookstore-api/
@@ -31,4 +31,4 @@ java-rest-framework/
 ├── .github/workflows/
 ├── .gitignore
 ├── .editorconfig
-└── jrf.toml.example
+└── dhole.toml.example

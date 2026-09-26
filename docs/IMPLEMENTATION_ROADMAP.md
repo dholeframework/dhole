@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define a ordem oficial de implementação do Java Rest Framework (JRF).
+Este documento define a ordem oficial de implementação do Dhole Framework.
 
 A finalidade é impedir que o projeto cresça de forma desorganizada ou que funcionalidades avançadas sejam desenvolvidas antes das fundações necessárias.
 
@@ -31,7 +31,7 @@ Durante todo o desenvolvimento:
 1. não implementar funcionalidades que não estejam justificadas pela especificação;
 2. não criar abstrações para problemas que ainda não existem;
 3. preferir código simples antes de otimizações prematuras;
-4. manter `jrf-core` pequeno;
+4. manter `dhole-core` pequeno;
 5. evitar dependências circulares entre módulos;
 6. preservar fronteiras entre API, SPI e internals;
 7. escrever testes desde o primeiro módulo;
@@ -41,7 +41,7 @@ Durante todo o desenvolvimento:
 11. não depender de annotations como mecanismo central;
 12. não utilizar reflection pesada como base da arquitetura;
 13. manter startup e shutdown previsíveis;
-14. não acoplar o JRF ao Tuprel no core;
+14. não acoplar o Dhole ao Tuprel no core;
 15. cada milestone deve produzir algo demonstrável.
 
 ---
@@ -64,7 +64,7 @@ M11 Testing Framework
 M12 Observability
 M13 Plugin Runtime
 M14 Production Hardening
-M15 JRF v0.1 Developer Preview
+M15 Dhole v0.1 Developer Preview
 ```
 
 A ordem pode sofrer pequenos ajustes durante implementação, mas dependências arquiteturais não devem ser ignoradas.
@@ -93,7 +93,7 @@ docs/
 ### 4.1 Confirmar estrutura
 
 ```text
-java-rest-framework/
+dhole/
 ├── docs/
 ├── modules/
 ├── tools/
@@ -101,32 +101,32 @@ java-rest-framework/
 └── examples/
 ```
 
-### 4.2 Definir package namespace temporário
+### 4.2 Definir package namespace
 
-Enquanto o domínio oficial não estiver decidido, usar:
+Namespace oficial (domínio `dhole.org`):
 
 ```text
-jrf.*
+org.dhole.*
 ```
 
 Exemplos:
 
 ```text
-jrf.application
-jrf.di
-jrf.http
-jrf.validation
+org.dhole.application
+org.dhole.di
+org.dhole.http
+org.dhole.validation
 ```
 
-Não publicar artefactos externos antes de decidir group/package namespace definitivo.
+Group/package namespace: `org.dhole`.
 
 ### 4.3 Escolher bootstrap de build interno
 
-O JRF promete que aplicações JRF não precisarão de `pom.xml`.
+O Dhole promete que aplicações Dhole não precisarão de `pom.xml`.
 
-Isso não significa que o próprio repositório JRF precisa reinventar o build system antes de existir.
+Isso não significa que o próprio repositório Dhole precisa reinventar o build system antes de existir.
 
-Para o bootstrap inicial do framework, escolher uma ferramenta Java madura apenas para construir o próprio JRF.
+Para o bootstrap inicial do framework, escolher uma ferramenta Java madura apenas para construir o próprio Dhole.
 
 A decisão deve ser documentada separadamente.
 
@@ -135,7 +135,7 @@ O futuro:
 ```text
 developer application
     ↓
-jrf build
+dhole build
 ```
 
 não depende necessariamente do build usado internamente para desenvolver o framework.
@@ -179,39 +179,39 @@ nullability conventions
 
 ## Objetivo
 
-Criar o menor runtime capaz de iniciar e parar uma aplicação JRF.
+Criar o menor runtime capaz de iniciar e parar uma aplicação Dhole.
 
 ## Módulo principal
 
 ```text
-modules/jrf-core
+modules/dhole-core
 ```
 
 ## Primeiras classes
 
 ```text
-jrf.Jrf
+org.dhole.Dhole
 
-jrf.application.Application
-jrf.application.DefaultApplication
-jrf.application.ApplicationBuilder
-jrf.application.ApplicationContext
-jrf.application.DefaultApplicationContext
-jrf.application.ApplicationState
+org.dhole.application.Application
+org.dhole.application.DefaultApplication
+org.dhole.application.ApplicationBuilder
+org.dhole.application.ApplicationContext
+org.dhole.application.DefaultApplicationContext
+org.dhole.application.ApplicationState
 
-jrf.bootstrap.Bootstrap
-jrf.bootstrap.BootstrapContext
-jrf.bootstrap.BootstrapException
+org.dhole.bootstrap.Bootstrap
+org.dhole.bootstrap.BootstrapContext
+org.dhole.bootstrap.BootstrapException
 
-jrf.lifecycle.LifecycleManager
-jrf.lifecycle.LifecycleException
-jrf.lifecycle.StartupTask
+org.dhole.lifecycle.LifecycleManager
+org.dhole.lifecycle.LifecycleException
+org.dhole.lifecycle.StartupTask
 ```
 
 ## Primeira API pública
 
 ```java
-public final class Jrf {
+public final class Dhole {
 
     public static void run(Class<?> applicationClass) {
         // bootstrap
@@ -224,12 +224,12 @@ public final class Jrf {
 ```java
 package example.hello;
 
-import jrf.Jrf;
+import org.dhole.Dhole;
 
 public class App {
 
     public static void main(String[] args) {
-        Jrf.run(App.class);
+        Dhole.run(App.class);
     }
 }
 ```
@@ -239,7 +239,7 @@ Neste milestone ainda não existe servidor HTTP.
 Saída:
 
 ```text
-JRF
+Dhole
 
 Application starting...
 Application ready.
@@ -281,7 +281,7 @@ shutdown after partial startup
 ## Critério de conclusão
 
 ```text
-✓ Jrf.run() works
+✓ Dhole.run() works
 ✓ lifecycle works
 ✓ shutdown works
 ✓ no HTTP/database/config yet
@@ -307,22 +307,22 @@ configuration validation
 ## Módulo
 
 ```text
-modules/jrf-config
+modules/dhole-config
 ```
 
 ## Classes iniciais
 
 ```text
-jrf.config.Environment
-jrf.config.DefaultEnvironment
-jrf.config.EnvironmentLoader
+org.dhole.config.Environment
+org.dhole.config.DefaultEnvironment
+org.dhole.config.EnvironmentLoader
 
-jrf.config.SettingsBuilder
-jrf.config.SettingsRegistry
-jrf.config.ConfigurationException
+org.dhole.config.SettingsBuilder
+org.dhole.config.SettingsRegistry
+org.dhole.config.ConfigurationException
 
-jrf.env.Env
-jrf.env.DotEnvLoader
+org.dhole.env.Env
+org.dhole.env.DotEnvLoader
 ```
 
 ## API inicial
@@ -411,32 +411,32 @@ Permitir plain Java constructor injection sem annotations.
 ## Módulo
 
 ```text
-modules/jrf-di
+modules/dhole-di
 ```
 
 ## Classes principais
 
 ```text
-jrf.di.ComponentDefinition
-jrf.di.ComponentRegistry
-jrf.di.ComponentOrigin
-jrf.di.ComponentScope
+org.dhole.di.ComponentDefinition
+org.dhole.di.ComponentRegistry
+org.dhole.di.ComponentOrigin
+org.dhole.di.ComponentScope
 
-jrf.di.DependencyGraph
-jrf.di.DependencyGraphBuilder
-jrf.di.DependencyNode
+org.dhole.di.DependencyGraph
+org.dhole.di.DependencyGraphBuilder
+org.dhole.di.DependencyNode
 
-jrf.di.DependencyContainer
-jrf.di.DefaultDependencyContainer
+org.dhole.di.DependencyContainer
+org.dhole.di.DefaultDependencyContainer
 
-jrf.di.Binding
-jrf.di.BindingRegistry
-jrf.di.Provider
-jrf.di.Factory
+org.dhole.di.Binding
+org.dhole.di.BindingRegistry
+org.dhole.di.Provider
+org.dhole.di.Factory
 
-jrf.di.DependencyException
-jrf.di.CircularDependencyException
-jrf.di.AmbiguousDependencyException
+org.dhole.di.DependencyException
+org.dhole.di.CircularDependencyException
+org.dhole.di.AmbiguousDependencyException
 ```
 
 ## Primeira demonstração
@@ -544,7 +544,7 @@ Mover descoberta e validação estrutural para build-time.
 ## Ferramenta
 
 ```text
-tools/jrf-compiler
+tools/dhole-compiler
 ```
 
 ## Subsystems
@@ -581,7 +581,7 @@ dependencies
 Partir de:
 
 ```java
-Jrf.run(App.class)
+Dhole.run(App.class)
 ```
 
 e root package.
@@ -591,7 +591,7 @@ e root package.
 Primeira versão pode gerar:
 
 ```text
-META-INF/jrf/components.idx
+META-INF/dhole/components.idx
 ```
 
 ou generated Java.
@@ -612,9 +612,9 @@ SourceLocation
 Primeiros codes:
 
 ```text
-JRF-DI-001 missing dependency
-JRF-DI-002 ambiguous dependency
-JRF-DI-003 circular dependency
+DHOLE-DI-001 missing dependency
+DHOLE-DI-002 ambiguous dependency
+DHOLE-DI-003 circular dependency
 ```
 
 ## Não implementar ainda
@@ -665,9 +665,9 @@ funcionar.
 ## Módulos
 
 ```text
-modules/jrf-http
-modules/jrf-routing
-modules/jrf-web
+modules/dhole-http
+modules/dhole-routing
+modules/dhole-web
 ```
 
 ## HTTP abstractions
@@ -715,7 +715,7 @@ public class HelloController extends Controller {
 ## Primeira execução
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 ainda não existe.
@@ -808,9 +808,9 @@ com JSON.
 ## Módulos
 
 ```text
-jrf-serialization
-jrf-json
-jrf-web
+dhole-serialization
+dhole-json
+dhole-web
 ```
 
 ## Serialization core
@@ -922,8 +922,8 @@ Completar a primeira experiência de API real.
 ## Módulos
 
 ```text
-jrf-validation
-jrf-web
+dhole-validation
+dhole-web
 ```
 
 ## Validation
@@ -1034,32 +1034,32 @@ Transformar o runtime num framework realmente utilizável.
 ## Ferramentas
 
 ```text
-tools/jrf-cli
-tools/jrf-build
-modules/jrf-devtools
+tools/dhole-cli
+tools/dhole-build
+modules/dhole-devtools
 ```
 
 ## Primeiros comandos
 
 ```bash
-jrf new
-jrf run
-jrf build
-jrf test
-jrf routes
-jrf config
-jrf doctor
+dhole new
+dhole run
+dhole build
+dhole test
+dhole routes
+dhole config
+dhole doctor
 ```
 
 Depois:
 
 ```bash
-jrf add
-jrf remove
-jrf dependencies
+dhole add
+dhole remove
+dhole dependencies
 ```
 
-## `jrf new`
+## `dhole new`
 
 Gerar:
 
@@ -1069,10 +1069,10 @@ Settings.java
 .env
 .env.example
 .gitignore
-jrf.toml
+dhole.toml
 ```
 
-## `jrf run`
+## `dhole run`
 
 ```text
 resolve
@@ -1081,7 +1081,7 @@ metadata
 launch
 ```
 
-## `jrf dev`
+## `dhole dev`
 
 ```text
 watch
@@ -1110,11 +1110,11 @@ new ApplicationContext
 ready
 ```
 
-## `jrf routes`
+## `dhole routes`
 
 Ler metadata e mostrar tabela.
 
-## `jrf doctor`
+## `dhole doctor`
 
 Primeiros checks:
 
@@ -1132,9 +1132,9 @@ dependency graph
 Um novo developer consegue:
 
 ```bash
-jrf new hello
+dhole new hello
 cd hello
-jrf dev
+dhole dev
 ```
 
 editar controller e ver restart automático.
@@ -1152,8 +1152,8 @@ Integrar persistência sem acoplar core ao ORM.
 ## Módulos
 
 ```text
-modules/jrf-database
-integrations/jrf-tuprel
+modules/dhole-database
+integrations/dhole-tuprel
 ```
 
 ## Database SPI
@@ -1173,9 +1173,9 @@ Não duplicar API do Tuprel desnecessariamente.
 ## Tuprel adapter
 
 ```text
-JRF Database SPI
+Dhole Database SPI
     ↓
-jrf-tuprel
+dhole-tuprel
     ↓
 Tuprel
 ```
@@ -1198,9 +1198,9 @@ database.transaction(() -> {
 ## CLI
 
 ```bash
-jrf db migrate
-jrf db rollback
-jrf db status
+dhole db migrate
+dhole db rollback
+dhole db status
 ```
 
 ## Bookstore
@@ -1231,9 +1231,9 @@ dev restart no connection leak
 ## Critério de conclusão
 
 ```text
-✓ Tuprel works inside JRF
+✓ Tuprel works inside Dhole
 ✓ Tuprel still works independently
-✓ jrf-core does not depend on Tuprel
+✓ dhole-core does not depend on Tuprel
 ✓ transactions work explicitly
 ```
 
@@ -1248,7 +1248,7 @@ Criar autenticação/autorização suficiente para APIs reais.
 ## Módulo
 
 ```text
-jrf-security
+dhole-security
 ```
 
 ## Implementar primeiro
@@ -1327,7 +1327,7 @@ Tornar testes uma feature central.
 ## Módulo
 
 ```text
-jrf-testing
+dhole-testing
 ```
 
 ## Criar
@@ -1395,12 +1395,12 @@ Integrar com adapter.
 
 ## Objetivo
 
-Tornar JRF operável em produção.
+Tornar Dhole operável em produção.
 
 ## Módulo
 
 ```text
-jrf-observability
+dhole-observability
 ```
 
 ## Implementar
@@ -1452,20 +1452,20 @@ which route is slow?
 
 ## Objetivo
 
-Abrir o ecossistema JRF sem abrir internals.
+Abrir o ecossistema Dhole sem abrir internals.
 
 ## Módulos
 
 ```text
-jrf-plugin-api
-jrf-plugin-runtime
+dhole-plugin-api
+dhole-plugin-runtime
 ```
 
 ## Implementar
 
 ```text
 PluginMetadata
-JrfPlugin
+DholePlugin
 PluginContext
 PluginRegistry
 compatibility validation
@@ -1490,7 +1490,7 @@ database adapters
 ## Primeiro plugin oficial completo
 
 ```text
-jrf-tuprel
+dhole-tuprel
 ```
 
 deve migrar para o contract oficial se ainda usar integração provisória.
@@ -1515,7 +1515,7 @@ start
 stop
 ```
 
-sem aceder `jrf.internal.*`.
+sem aceder `org.dhole.internal.*`.
 
 ---
 
@@ -1577,7 +1577,7 @@ dev restart
 Especialmente:
 
 ```text
-jrf dev restart loops
+dhole dev restart loops
 classloaders
 threads
 connections
@@ -1604,7 +1604,7 @@ Definir Java versions suportadas.
 
 ---
 
-# 19. M15 — JRF v0.1 Developer Preview
+# 19. M15 — Dhole v0.1 Developer Preview
 
 ## Objetivo
 
@@ -1615,7 +1615,7 @@ Não chamar `1.0`.
 Exemplo:
 
 ```text
-JRF 0.1.0 Developer Preview
+Dhole 0.1.0 Developer Preview
 ```
 
 ## Funcionalidades obrigatórias
@@ -1702,7 +1702,7 @@ validation/errors
 ## M8
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 ## M11
@@ -1816,9 +1816,9 @@ avoid needless renames
 Direção pretendida:
 
 ```text
-jrf.api.*
-jrf.spi.*
-jrf.internal.*
+org.dhole.api.*
+org.dhole.spi.*
+org.dhole.internal.*
 ```
 
 A organização real pode usar packages mais naturais por módulo, mas o conceito permanece:
@@ -1968,7 +1968,7 @@ license acceptable
 does not expose unnecessary API coupling
 ```
 
-Encapsular bibliotecas externas atrás de APIs JRF quando apropriado.
+Encapsular bibliotecas externas atrás de APIs Dhole quando apropriado.
 
 ---
 
@@ -1989,7 +1989,7 @@ AI integration
 full admin dashboard
 ```
 
-Estas features podem ser excelentes no futuro, mas não definem o sucesso inicial do JRF.
+Estas features podem ser excelentes no futuro, mas não definem o sucesso inicial do Dhole.
 
 ---
 
@@ -1998,9 +1998,9 @@ Estas features podem ser excelentes no futuro, mas não definem o sucesso inicia
 O primeiro grande objetivo técnico do projeto é atingir isto:
 
 ```bash
-jrf new bookstore
+dhole new bookstore
 cd bookstore
-jrf dev
+dhole dev
 ```
 
 e permitir:
@@ -2062,7 +2062,7 @@ dev reload
 
 funcionais.
 
-Quando isso estiver sólido, o JRF já terá identidade real.
+Quando isso estiver sólido, o Dhole já terá identidade real.
 
 ---
 
@@ -2071,28 +2071,28 @@ Quando isso estiver sólido, o JRF já terá identidade real.
 Ordem prática resumida:
 
 ```text
-1.  jrf-core
-2.  jrf-config
-3.  jrf-di
-4.  jrf-compiler — component metadata
-5.  jrf-http
-6.  jrf-routing
-7.  jrf-web
-8.  jrf-serialization
-9.  jrf-json
+1.  dhole-core
+2.  dhole-config
+3.  dhole-di
+4.  dhole-compiler — component metadata
+5.  dhole-http
+6.  dhole-routing
+7.  dhole-web
+8.  dhole-serialization
+9.  dhole-json
 10. parameter binding
-11. jrf-validation
+11. dhole-validation
 12. error handling
-13. jrf-cli
-14. jrf-build
-15. jrf-devtools
-16. jrf-database
-17. jrf-tuprel
-18. jrf-security
-19. jrf-testing
-20. jrf-observability
-21. jrf-plugin-api
-22. jrf-plugin-runtime
+13. dhole-cli
+14. dhole-build
+15. dhole-devtools
+16. dhole-database
+17. dhole-tuprel
+18. dhole-security
+19. dhole-testing
+20. dhole-observability
+21. dhole-plugin-api
+22. dhole-plugin-runtime
 23. production hardening
 ```
 
@@ -2103,13 +2103,13 @@ Ordem prática resumida:
 O primeiro código real deve começar em:
 
 ```text
-modules/jrf-core
+modules/dhole-core
 ```
 
 Primeiras classes:
 
 ```text
-Jrf.java
+Dhole.java
 Application.java
 DefaultApplication.java
 ApplicationState.java
@@ -2133,7 +2133,7 @@ Primeiro objetivo executável:
 public class App {
 
     public static void main(String[] args) {
-        Jrf.run(App.class);
+        Dhole.run(App.class);
     }
 }
 ```
@@ -2150,4 +2150,4 @@ Ao longo de toda a implementação:
 
 > **Do not build the impressive part before the dependable part.**
 
-O JRF deve ganhar poder por camadas, mantendo cada camada simples, testável e compreensível.
+O Dhole deve ganhar poder por camadas, mantendo cada camada simples, testável e compreensível.

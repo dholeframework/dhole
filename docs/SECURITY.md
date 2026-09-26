@@ -4,7 +4,7 @@
 
 Security faz parte do framework base de backend, não é uma extensão tardia.
 
-O JRF deve oferecer defaults seguros sem esconder decisões importantes.
+O Dhole deve oferecer defaults seguros sem esconder decisões importantes.
 
 ---
 
@@ -175,7 +175,7 @@ security.rateLimit("login", limit -> limit
 
 ## 12. Secrets
 
-`jrf config` mascara:
+`dhole config` mascara:
 
 ```text
 JWT_SECRET  ********
@@ -187,7 +187,7 @@ Logs também.
 
 ## 13. Production checks
 
-`jrf doctor` deve alertar:
+`dhole doctor` deve alertar:
 
 ```text
 debug enabled

@@ -4,12 +4,12 @@
 
 A validação deixa de ser uma área em aberto.
 
-Na especificação v0.1, Validation é uma capacidade oficial do JRF e fará parte da primeira versão utilizável do framework.
+Na especificação v0.1, Validation é uma capacidade oficial do Dhole e fará parte da primeira versão utilizável do framework.
 
 O módulo oficial é:
 
 ```text
-jrf-validation
+dhole-validation
 ```
 
 ---
@@ -421,7 +421,7 @@ Plugins podem contribuir:
 - validation codecs;
 - integrations.
 
-Mas o `jrf-validation` continua independente do plugin runtime para funcionar sozinho.
+Mas o `dhole-validation` continua independente do plugin runtime para funcionar sozinho.
 
 ---
 

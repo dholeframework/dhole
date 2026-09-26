@@ -2,7 +2,7 @@
 
 ## 1. Definição
 
-No JRF, "hot reload" descreve a experiência do developer, mas a implementação inicial será deliberadamente conservadora.
+No Dhole, "hot reload" descreve a experiência do developer, mas a implementação inicial será deliberadamente conservadora.
 
 A v0.1 prioriza:
 
@@ -177,7 +177,7 @@ deve atualizar metadata correspondente antes do restart.
 
 Hot reload/devtools não são carregados em production distributions por defeito.
 
-`jrf-devtools` é development-only.
+`dhole-devtools` é development-only.
 
 ---
 

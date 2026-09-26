@@ -2,12 +2,12 @@
 
 ## 1. Estado
 
-`jrf dev` é parte oficial da experiência JRF v0.1.
+`dhole dev` é parte oficial da experiência Dhole v0.1.
 
 O módulo responsável é:
 
 ```text
-jrf-devtools
+dhole-devtools
 ```
 
 ---
@@ -17,7 +17,7 @@ jrf-devtools
 O developer executa:
 
 ```bash
-jrf dev
+dhole dev
 ```
 
 e recebe um ambiente de desenvolvimento integrado:
@@ -35,7 +35,7 @@ e recebe um ambiente de desenvolvimento integrado:
 ## 3. Startup
 
 ```text
-jrf dev
+dhole dev
     ↓
 load project
     ↓
@@ -57,7 +57,7 @@ ready
 ## 4. Example output
 
 ```text
-JRF Dev
+Dhole Dev
 
 Application   shop
 Java          21
@@ -80,7 +80,7 @@ O watcher observa inicialmente:
 ```text
 src/main/java/
 src/main/resources/
-jrf.toml
+dhole.toml
 .env
 ```
 
@@ -117,7 +117,7 @@ ou restart mínimo.
 ### Dependency change
 
 ```text
-jrf.toml
+dhole.toml
 ```
 
 Ação:
@@ -162,7 +162,7 @@ Application remains stopped at previous safe state.
 Waiting for changes...
 ```
 
-O processo `jrf dev` continua vivo.
+O processo `dhole dev` continua vivo.
 
 Após correção:
 
@@ -200,7 +200,7 @@ Estado durável deve viver em infraestrutura apropriada.
 
 ## 10. Database safety
 
-`jrf dev` nunca executa automaticamente migrations destrutivas sem política explícita.
+`dhole dev` nunca executa automaticamente migrations destrutivas sem política explícita.
 
 Pode detetar:
 
@@ -217,7 +217,7 @@ e informar.
 Modo futuro:
 
 ```bash
-jrf dev --test
+dhole dev --test
 ```
 
 ou watch tests separado.
@@ -258,4 +258,4 @@ Pode ser explorado numa versão futura.
 
 ## 14. Regra central
 
-> **`jrf dev` deve transformar editar-compilar-executar num ciclo quase imediato, sem comprometer previsibilidade.**
+> **`dhole dev` deve transformar editar-compilar-executar num ciclo quase imediato, sem comprometer previsibilidade.**
