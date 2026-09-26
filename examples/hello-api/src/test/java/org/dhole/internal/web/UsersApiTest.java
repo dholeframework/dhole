@@ -79,6 +79,46 @@ class UsersApiTest {
         assertEquals("Hello World", send("GET", "/hello", null, null, null).body());
     }
 
+    @Test
+    void generatedValidationIndexNamesTheFieldsInOrder() throws IOException {
+        String index;
+        try (InputStream input = App.class.getClassLoader().getResourceAsStream("META-INF/dhole/validation.idx")) {
+            index = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        assertTrue(index.startsWith("dhole-validation 1\n\ntype example.hello.users.CreateUser\n"
+                + "field name java.lang.String\nfield email java.lang.String\n"), index);
+    }
+
+    @Test
+    void invalidUserIsRejectedWith422AndFieldErrors() throws Exception {
+        HttpResponse<String> response = send("POST", "/users", "{\"name\":\"\",\"email\":\"not-an-email\"}",
+                "application/json", null);
+
+        assertEquals(422, response.statusCode());
+        assertEquals(Optional.of("application/json"), response.headers().firstValue("Content-Type"));
+        String requestId = response.headers().firstValue("X-Request-Id").orElseThrow();
+        assertEquals("{\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"The request contains invalid fields.\","
+                + "\"fields\":{\"name\":[{\"code\":\"NOT_BLANK\",\"message\":\"Must not be blank.\"}],"
+                + "\"email\":[{\"code\":\"INVALID_EMAIL\",\"message\":\"Must be a valid email address.\"}]},"
+                + "\"requestId\":\"" + requestId + "\"}}", response.body());
+        // Explicit nulls reach validation (REQUIRED); missing record properties stay a 400 binding
+        // failure (SERIALIZATION.md §11).
+        HttpResponse<String> nulls = send("POST", "/users", "{\"name\":null,\"email\":null}", "application/json", null);
+        assertEquals(422, nulls.statusCode());
+        assertTrue(nulls.body().contains("\"name\":[{\"code\":\"REQUIRED\",\"message\":\"Is required.\"}]"), nulls.body());
+        assertEquals(400, send("POST", "/users", "{}", "application/json", null).statusCode());
+    }
+
+    @Test
+    void unknownUserIsANotFoundEnvelope() throws Exception {
+        HttpResponse<String> response = send("GET", "/users/0", null, null, null);
+
+        assertEquals(404, response.statusCode());
+        assertEquals("{\"error\":{\"code\":\"NOT_FOUND\",\"message\":\"User not found.\",\"requestId\":\""
+                + response.headers().firstValue("X-Request-Id").orElseThrow() + "\"}}", response.body());
+    }
+
     private HttpResponse<String> send(String method, String path, String body, String contentType, String accept)
             throws IOException, InterruptedException {
         HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + runtime.port() + path))

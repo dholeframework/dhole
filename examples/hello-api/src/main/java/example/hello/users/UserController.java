@@ -2,6 +2,7 @@ package example.hello.users;
 
 import org.dhole.routing.Router;
 import org.dhole.web.Controller;
+import org.dhole.web.Errors;
 
 public final class UserController extends Controller {
 
@@ -12,6 +13,9 @@ public final class UserController extends Controller {
     }
 
     User find(long id) {
+        if (id <= 0) {
+            throw Errors.notFound("User");
+        }
         return new User(id, "User " + id, "user" + id + "@example.com");
     }
 
