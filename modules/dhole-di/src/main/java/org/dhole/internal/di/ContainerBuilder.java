@@ -26,6 +26,7 @@ final class ContainerBuilder {
     private final List<Class<?>> registrations = new ArrayList<>();
     private final Map<Class<?>, Binding> bindings = new LinkedHashMap<>();
     private final Map<Class<?>, ComponentScope> components = new LinkedHashMap<>();
+    private ComponentMetadata metadata = ComponentMetadata.empty();
 
     private ContainerBuilder() {
     }
@@ -76,8 +77,17 @@ final class ContainerBuilder {
         return addBinding(new Binding.ToFactory(type, scope, factory));
     }
 
+    /**
+     * Uses the build-time component index for constructor definitions and as known providers of
+     * interfaces and abstract classes. Without it, constructors are analyzed by reflection.
+     */
+    ContainerBuilder metadata(ComponentMetadata metadata) {
+        this.metadata = Objects.requireNonNull(metadata, "metadata");
+        return this;
+    }
+
     ComponentRegistry registry() {
-        return new ComponentRegistry(registrations, bindings, components);
+        return new ComponentRegistry(registrations, bindings, components, metadata);
     }
 
     /**

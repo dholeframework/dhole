@@ -97,7 +97,7 @@ class ComponentRegistryTest {
         DependencyException failure = assertThrows(DependencyException.class,
                 () -> definition(ContainerBuilder.create(), PaymentGateway.class));
 
-        assertEquals("Dependency Error\n\nNo provider found for PaymentGateway.", failure.getMessage());
+        assertEquals("Dependency Error DHOLE-DI-001\n\nNo provider found for PaymentGateway.", failure.getMessage());
     }
 
     @Test
@@ -120,7 +120,7 @@ class ComponentRegistryTest {
             AmbiguousDependencyException failure = assertThrows(AmbiguousDependencyException.class,
                     () -> definition(builder, PaymentGateway.class));
 
-            assertEquals("Dependency Error\n\nMultiple providers found for PaymentGateway:\n\n"
+            assertEquals("Dependency Error DHOLE-DI-002\n\nMultiple providers found for PaymentGateway:\n\n"
                     + "- PaypalPaymentGateway\n- StripePaymentGateway\n\nDeclare an explicit binding.",
                     failure.getMessage());
         }

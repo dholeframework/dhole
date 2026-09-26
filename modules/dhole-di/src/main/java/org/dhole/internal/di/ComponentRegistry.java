@@ -5,6 +5,10 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.dhole.di.AmbiguousDependencyException;
@@ -18,21 +22,25 @@ import org.dhole.di.DependencyException;
  * <ol>
  *   <li>an explicit binding for the type wins;</li>
  *   <li>a concrete class is constructed from its single eligible constructor;</li>
- *   <li>an interface or abstract class resolves to the only registered component assignable to
- *       it; none is a missing provider, several are ambiguous.</li>
+ *   <li>an interface or abstract class resolves to the only known provider assignable to it:
+ *       a registered component or a class of the build-time component index; none is a missing
+ *       provider, several are ambiguous.</li>
  * </ol>
- * Registration order never selects between candidates.
+ * Registration order never selects between candidates. Constructor definitions of indexed types
+ * come from the index; other types use controlled reflection with the same rule.
  */
 final class ComponentRegistry {
 
     private final List<Class<?>> registrations;
     private final Map<Class<?>, Binding> bindings;
     private final Map<Class<?>, ComponentScope> components;
+    private final ComponentMetadata metadata;
     private final Map<Class<?>, ComponentDefinition> bound = new LinkedHashMap<>();
     private final Map<Class<?>, ComponentDefinition> constructed = new ConcurrentHashMap<>();
 
     ComponentRegistry(List<Class<?>> registrations, Map<Class<?>, Binding> bindings,
-            Map<Class<?>, ComponentScope> components) {
+            Map<Class<?>, ComponentScope> components, ComponentMetadata metadata) {
+        this.metadata = Objects.requireNonNull(metadata, "metadata");
         this.registrations = List.copyOf(registrations);
         this.bindings = Map.copyOf(bindings);
         this.components = Map.copyOf(components);
@@ -73,15 +81,16 @@ final class ComponentRegistry {
                     DependencyMessages.name(requested) + " cannot be injected.", path));
         }
         if (requested.isInterface() || Modifier.isAbstract(requested.getModifiers())) {
-            List<Class<?>> candidates = components.keySet().stream()
-                    .filter(requested::isAssignableFrom)
-                    .sorted(Comparator.comparing(Class::getName))
-                    .toList();
+            Set<Class<?>> known = new TreeSet<>(Comparator.comparing(Class::getName));
+            components.keySet().stream().filter(requested::isAssignableFrom).forEach(known::add);
+            metadata.providersOf(requested.getName()).stream().map(metadata::loadClass).forEach(known::add);
+            List<Class<?>> candidates = List.copyOf(known);
             if (candidates.isEmpty()) {
-                throw new DependencyException(DependencyMessages.missing(requested, path));
+                throw new DependencyException(DependencyMessages.missing(requested, path, requirerLocation(path)));
             }
             if (candidates.size() > 1) {
-                throw new AmbiguousDependencyException(DependencyMessages.ambiguous(requested, candidates, path));
+                throw new AmbiguousDependencyException(
+                        DependencyMessages.ambiguous(requested, candidates, path, requirerLocation(path)));
             }
             return constructed(candidates.get(0), path);
         }
@@ -91,9 +100,27 @@ final class ComponentRegistry {
     private ComponentDefinition constructed(Class<?> type, List<Class<?>> path) {
         try {
             return constructed.computeIfAbsent(type,
-                    t -> ConstructorDefinitions.of(t, components.getOrDefault(t, ComponentScope.SINGLETON)));
+                    t -> define(t, components.getOrDefault(t, ComponentScope.SINGLETON)));
         } catch (UnusableComponentException e) {
             throw new DependencyException(DependencyMessages.unusable(type, e.getMessage(), path));
         }
+    }
+
+    private ComponentDefinition define(Class<?> type, ComponentScope scope) {
+        Optional<ComponentMetadata.TypeMetadata> indexed = metadata.type(type.getName());
+        return indexed.isPresent()
+                ? ConstructorDefinitions.fromMetadata(type, indexed.get(), metadata, scope)
+                : ConstructorDefinitions.of(type, scope);
+    }
+
+    /**
+     * Returns the recorded source location of the component that requires the last type of
+     * {@code path}, if the index has one.
+     */
+    private Optional<String> requirerLocation(List<Class<?>> path) {
+        if (path.size() < 2) {
+            return Optional.empty();
+        }
+        return metadata.type(path.get(path.size() - 2).getName()).flatMap(ComponentMetadata.TypeMetadata::source);
     }
 }

@@ -137,7 +137,7 @@ class DependencyContainerTest {
                         })
                         .build());
 
-        assertEquals("Circular Dependency\n\nUserRepository\n  -> UserService\n      -> UserRepository",
+        assertEquals("Circular Dependency DHOLE-DI-003\n\nUserRepository\n  -> UserService\n      -> UserRepository",
                 failure.getMessage());
     }
 

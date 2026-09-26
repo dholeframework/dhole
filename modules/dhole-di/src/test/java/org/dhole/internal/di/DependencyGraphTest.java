@@ -92,7 +92,7 @@ class DependencyGraphTest {
         CircularDependencyException failure = assertThrows(CircularDependencyException.class,
                 () -> graph(ContainerBuilder.create(), CycleA.class));
 
-        assertEquals("Circular Dependency\n\nCycleA\n  -> CycleB\n      -> CycleC\n          -> CycleA",
+        assertEquals("Circular Dependency DHOLE-DI-003\n\nCycleA\n  -> CycleB\n      -> CycleC\n          -> CycleA",
                 failure.getMessage());
     }
 
@@ -101,13 +101,13 @@ class DependencyGraphTest {
         CircularDependencyException failure = assertThrows(CircularDependencyException.class,
                 () -> graph(ContainerBuilder.create(), CycleB.class));
 
-        assertEquals("Circular Dependency\n\nCycleB\n  -> CycleC\n      -> CycleA\n          -> CycleB",
+        assertEquals("Circular Dependency DHOLE-DI-003\n\nCycleB\n  -> CycleC\n      -> CycleA\n          -> CycleB",
                 failure.getMessage());
     }
 
     @Test
     void selfDependencyIsACycle() {
-        assertEquals("Circular Dependency\n\nSelfDependent\n  -> SelfDependent",
+        assertEquals("Circular Dependency DHOLE-DI-003\n\nSelfDependent\n  -> SelfDependent",
                 assertThrows(CircularDependencyException.class,
                         () -> graph(ContainerBuilder.create(), SelfDependent.class)).getMessage());
     }
@@ -119,7 +119,7 @@ class DependencyGraphTest {
         CircularDependencyException failure = assertThrows(CircularDependencyException.class,
                 () -> graph(builder, OrderService.class));
 
-        assertEquals("Circular Dependency\n\nOrderService\n  -> PaymentGateway\n      -> OrderService",
+        assertEquals("Circular Dependency DHOLE-DI-003\n\nOrderService\n  -> PaymentGateway\n      -> OrderService",
                 failure.getMessage());
     }
 
@@ -128,7 +128,7 @@ class DependencyGraphTest {
         DependencyException failure = assertThrows(DependencyException.class,
                 () -> graph(ContainerBuilder.create(), NeedsMissing.class));
 
-        assertEquals("Dependency Error\n\nNo provider found for AbstractStorage.\n\n"
+        assertEquals("Dependency Error DHOLE-DI-001\n\nNo provider found for AbstractStorage.\n\n"
                 + "Dependency path:\nNeedsMissing\n  -> AbstractStorage", failure.getMessage());
     }
 
@@ -141,7 +141,7 @@ class DependencyGraphTest {
         AmbiguousDependencyException failure = assertThrows(AmbiguousDependencyException.class,
                 () -> graph(builder, OrderService.class));
 
-        assertEquals("Dependency Error\n\nMultiple providers found for PaymentGateway:\n\n"
+        assertEquals("Dependency Error DHOLE-DI-002\n\nMultiple providers found for PaymentGateway:\n\n"
                 + "- PaypalPaymentGateway\n- StripePaymentGateway\n\n"
                 + "Dependency path:\nOrderService\n  -> PaymentGateway\n\nDeclare an explicit binding.",
                 failure.getMessage());
