@@ -19,7 +19,7 @@ M4 — Metadata Compiler
 ## Current Slice
 
 ```text
-M4 complete locally (final slice: end-to-end metadata verification)
+M4 complete locally (final slice: repository build integration)
 ```
 
 ## Status
@@ -273,8 +273,15 @@ Roadmap §8, verified:
     constructors (CompiledMetadataTest, end to end through the M3 container)
 [x] build can generate component metadata; runtime can consume it; DI needs no runtime scanning
     (none exists; indexed types are not analyzed reflectively); diagnostics carry file/line
-[-] build-time graph validation (DI-001..003 at compile time): needs structural roots (M5+) and
-    build-time bindings; reported by the runtime DI with index locations until then
+[x] repository build integration: dhole-compiler's "fixture" source set is compiled by Gradle's
+    JavaCompile with the compiler jar on the annotation processor path and
+    -Adhole.application=com.acme.fixture.App; FixtureBuildTest verifies the resulting
+    components.idx (header, root respected, expected types, com.acme.outside excluded).
+    Internal harness only; the product contract remains dhole build/run/dev (M8).
+[x] diagnostic prefixes: DHOLE-META-* compiler/metadata, DHOLE-DI-* dependency injection
+[-] build-time graph validation (DI-001..003 at compile time): deferred until real structural
+    roots exist (M5+), which must connect to the compiler's validator/diagnostic path; runtime DI
+    reports them with index locations until then
 ```
 
 ---
@@ -284,12 +291,14 @@ Roadmap §8, verified:
 ```text
 M4 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
-                                                        BUILD SUCCESSFUL, 69 tasks (60 executed), no warnings
-  dhole-compiler: MetadataProcessorTest 16, CompiledMetadataTest 6 (end to end)  22 tests, PASSED
+                                                        BUILD SUCCESSFUL, 70 tasks (61 executed), no warnings
+  :dhole-compiler:compileFixtureJava ran the processor through Gradle JavaCompile
+  dhole-compiler: MetadataProcessorTest 16, CompiledMetadataTest 6 (end to end),
+                  FixtureBuildTest 1 (repository build output)              23 tests, PASSED
   dhole-di:       M3 suite 69 + ComponentMetadataTest 9 + MetadataResolutionTest 10  88 tests, PASSED
   dhole-config:   unchanged M2 suite                                        91 test cases, PASSED
   dhole-core:     unchanged M1 suite                                        33 tests, PASSED
-  total                                                                    234 test cases, PASSED
+  total                                                                    235 test cases, PASSED
   :dhole-core:verifyCoreIsolation                       PASSED
   First attempt at the compiler check failed (Gradle build-logic lock held by a VS Code Gradle
   process, then a daemon crash from host memory); rerun after closing VS Code passed.
@@ -424,9 +433,12 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
 - Package-private constructors are not injectable: metadata v1 has no generated factories
   (owner decision, intentional v1 limitation, not a permanent rule). A later metadata version may
   add factories without changing DI semantics.
-- Metadata compiler is not yet invoked by any product build: the Dhole build system (M8) passes
-  -Adhole.application from dhole.toml [build] main. The repository's Gradle build does not wire
-  the processor into examples; tests run it in-process through javax.tools.
+- No product build invokes the metadata compiler yet: the Dhole build system (M8) passes
+  -Adhole.application from dhole.toml [build] main. Inside the repository, the internal harness
+  (dhole-compiler "fixture" source set) proves the real Gradle JavaCompile pipeline runs it.
+- Build-time dependency-graph validation is deferred, not dropped: the first milestone with real
+  structural roots (Controller, M5+) must connect them to the metadata compiler's validator and
+  diagnostic path (METADATA_COMPILER.md §34.1). Runtime-only DI-001..003 is not the final design.
 - The processor is not declared as a Gradle incremental processor; index output is deterministic
   and machine-independent, so incremental compilation can be added later (METADATA_COMPILER.md §35).
 - Not implemented in M4 (later milestones): route, validation, serialization, plugin and module
@@ -523,7 +535,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
 0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
-6525560 test(compiler): verify generated metadata with the dependency container   (local clean build only; GitHub Actions not yet run)
+bd8ac50 docs(architecture): reserve metadata diagnostic prefix and defer build-time graph validation   (local clean build only; GitHub Actions not yet run)
 ```
 
 ---
