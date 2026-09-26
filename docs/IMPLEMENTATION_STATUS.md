@@ -19,7 +19,7 @@ M6 — Serialization + Parameter Binding
 ## Current Slice
 
 ```text
-M6 architecture decisions recorded; implementation starting
+M6 in progress: serialization, JSON, typed route builder, binding wrappers and route analysis done; dedicated route-analysis tests, runtime binding and E2E pending
 ```
 
 ## Status
@@ -83,7 +83,17 @@ Code exists in dhole-core (M1), dhole-config (M2), dhole-di (M3-M5), dhole-compi
 
 ## In Progress
 
-None.
+```text
+M6 — Serialization + Parameter Binding (IN PROGRESS, all committed, build green)
+Done: 3fae377 serialization contracts, cd9a6c8 Jackson adapter, 56bf6bf typed route builder,
+      c156d7a binding wrappers, route analysis + routes.idx writer (DHOLE-ROUTE/BIND codes).
+Next: 1. compiler tests for route analysis (testImplementation dhole-web; fixtures for this::find,
+         this::create, groups, generics, non-constant path, ambiguity, determinism);
+      2. dhole-web runtime: routes.idx reader, ConversionService, ParameterBinder/BindingPlan,
+         Request query access, Accept/Content-Type negotiation (400/406/415), typed-route startup
+         check (missing/stale metadata -> rebuild error), JSON response mapping;
+      3. E2E in hello-api; roadmap §10 tests; status COMPLETE LOCALLY.
+```
 
 ---
 

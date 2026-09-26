@@ -113,17 +113,35 @@ public final class MetadataProcessor extends AbstractProcessor {
                 records.add(analyzer.analyze(type));
             }
         }
-        write(ComponentIndexWriter.write(records));
+        write(ComponentIndexWriter.LOCATION, ComponentIndexWriter.write(records));
+
+        Trees trees = trees();
+        List<RouteRecord> routes = new ArrayList<>();
+        if (trees != null) {
+            RouteAnalyzer routeAnalyzer = new RouteAnalyzer(processingEnv.getElementUtils(),
+                    processingEnv.getTypeUtils(), trees);
+            for (ComponentRecord record : records) {
+                if (record.supertypes().contains(RouteAnalyzer.CONTROLLER)) {
+                    routes.addAll(routeAnalyzer.analyze(
+                            processingEnv.getElementUtils().getTypeElement(record.type().replace('$', '.'))));
+                }
+            }
+            for (RouteAnalyzer.Problem problem : routeAnalyzer.problems()) {
+                failed = true;
+                trees.printMessage(javax.tools.Diagnostic.Kind.ERROR, problem.diagnostic().format(), problem.tree(),
+                        problem.unit());
+            }
+        }
+        write(RouteIndexWriter.LOCATION, RouteIndexWriter.write(routes));
     }
 
-    private void write(String index) {
+    private void write(String location, String index) {
         try (OutputStream output = processingEnv.getFiler()
-                .createResource(StandardLocation.CLASS_OUTPUT, "", ComponentIndexWriter.LOCATION)
+                .createResource(StandardLocation.CLASS_OUTPUT, "", location)
                 .openOutputStream()) {
             output.write(index.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            report(new Diagnostic(null, DiagnosticSeverity.ERROR,
-                    "Unable to write " + ComponentIndexWriter.LOCATION + ": " + e.getMessage()));
+            report(new Diagnostic(null, DiagnosticSeverity.ERROR, "Unable to write " + location + ": " + e.getMessage()));
         }
     }
 
