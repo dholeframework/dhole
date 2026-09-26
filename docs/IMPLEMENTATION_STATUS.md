@@ -19,7 +19,7 @@ M4 — Metadata Compiler
 ## Current Slice
 
 ```text
-M4 architecture decisions recorded; implementation starting
+M4 complete locally (final slice: end-to-end metadata verification)
 ```
 
 ## Status
@@ -29,7 +29,8 @@ M0 — Repository Foundation   COMPLETE
 M1 — Core Runtime            COMPLETE (local build + GitHub Actions on ad60595)
 M2 — Configuration           COMPLETE (local build + GitHub Actions on 7f19906)
 M3 — Component Model + DI    COMPLETE (local build + GitHub Actions on 0f83bd4)
-M4 — Metadata Compiler       IN PROGRESS
+M4 — Metadata Compiler       COMPLETE LOCALLY (GitHub Actions not yet run on the M4 commits)
+M5 — HTTP + Routing          NOT STARTED
 ```
 
 ---
@@ -75,7 +76,7 @@ hello-api     -> implementation(dhole-core)
 bookstore-api -> implementation(dhole-core)
 ```
 
-Code exists in dhole-core (M1), dhole-config (M2), dhole-di (M3) and examples/hello-api (M1 demo).
+Code exists in dhole-core (M1), dhole-config (M2), dhole-di (M3, M4 index reader), dhole-compiler (M4) and examples/hello-api (M1 demo).
 
 ---
 
@@ -234,11 +235,65 @@ in dhole-di); dependency graph is inspectable; cycles fail early (graph validati
 build); container cleanup works.
 ```
 
+## M4 Progress
+
+### M4 — Metadata Compiler
+
+Status: COMPLETE LOCALLY
+
+```text
+tools/dhole-compiler (org.dhole.internal.compiler; only the processor class is public, as javac
+requires; registered in META-INF/services/javax.annotation.processing.Processor):
+[x] MetadataProcessor — annotation processor claiming no annotations ("*", returns false);
+    option dhole.application; collects compiled types over all rounds (including types generated
+    by other processors); writes the index with Filer in the final round; no class loading
+[x] ApplicationRoot — root package of the configured class; only root + subpackages indexed
+[x] ComponentAnalyzer — structural constructor rule mirroring M3; Class.forName type names;
+    transitive supertypes (erasure, without Object); portable source location via javac Trees
+[x] ComponentIndexWriter — META-INF/dhole/components.idx v1 (METADATA_COMPILER.md §34.2), sorted
+[x] Diagnostic / DiagnosticCode / DiagnosticSeverity / SourceLocation — compiler diagnostics
+    through Messager; DHOLE-META-001 invalid or missing application class
+
+modules/dhole-di (internal, no dependency on the compiler):
+[x] ComponentMetadata — strict reader: unknown version = Metadata Compatibility Error
+    (METADATA_COMPILER.md §57), malformed = error with line; several indexes rejected; classes
+    loaded only when a resolution needs them
+[x] ConstructorDefinitions.fromMetadata — recorded constructor looked up for invocation only;
+    recorded problems reported with the same text as the reflective path plus Location; stale
+    index (constructor no longer declared) fails with "Rebuild the application"
+[x] ComponentRegistry — indexed classes are known providers of their supertypes (not eager, not
+    registrations); types outside the index keep the controlled reflective fallback
+[x] Codes DHOLE-DI-001 missing, DHOLE-DI-002 ambiguous, DHOLE-DI-003 circular; missing and
+    ambiguous errors include "Required at: <path>:<line>" from the index
+
+Roadmap §8, verified:
+[x] M4.1 component metadata (type, constructor, dependencies)  [x] M4.2 application root
+[x] M4.3 generated index (components.idx)                      [x] M4.4 diagnostics structure + codes
+[x] compile fixtures: valid project, missing dependency, ambiguous dependency, multiple
+    constructors (CompiledMetadataTest, end to end through the M3 container)
+[x] build can generate component metadata; runtime can consume it; DI needs no runtime scanning
+    (none exists; indexed types are not analyzed reflectively); diagnostics carry file/line
+[-] build-time graph validation (DI-001..003 at compile time): needs structural roots (M5+) and
+    build-time bindings; reported by the runtime DI with index locations until then
+```
+
 ---
 
 ## Tests
 
 ```text
+M4 final (JDK 21.0.12, Windows 11, no VS Code running):
+./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
+                                                        BUILD SUCCESSFUL, 69 tasks (60 executed), no warnings
+  dhole-compiler: MetadataProcessorTest 16, CompiledMetadataTest 6 (end to end)  22 tests, PASSED
+  dhole-di:       M3 suite 69 + ComponentMetadataTest 9 + MetadataResolutionTest 10  88 tests, PASSED
+  dhole-config:   unchanged M2 suite                                        91 test cases, PASSED
+  dhole-core:     unchanged M1 suite                                        33 tests, PASSED
+  total                                                                    234 test cases, PASSED
+  :dhole-core:verifyCoreIsolation                       PASSED
+  First attempt at the compiler check failed (Gradle build-logic lock held by a VS Code Gradle
+  process, then a daemon crash from host memory); rerun after closing VS Code passed.
+
 M3 final (JDK 21.0.12, Windows 11, no VS Code running):
 ./gradlew clean build -Dkotlin.compiler.execution.strategy=in-process --warning-mode all
                                                         BUILD SUCCESSFUL, 65 tasks (56 executed), no warnings
@@ -366,8 +421,18 @@ Negative check (M0): temporary failing JUnit test      test task FAILED as expec
   List<T> injection (§39, §40), generic bindings (§21), named bindings (§22), test overrides
   replace() (§47, M11), Startable/Stoppable callbacks (§32), component origins other than
   APPLICATION/FACTORY (§4), diagnostic codes (DHOLE-DI-xxx).
-- Package-private constructors are not injectable until generated factories (M4) can call them
-  from the same package.
+- Package-private constructors are not injectable: metadata v1 has no generated factories
+  (owner decision, intentional v1 limitation, not a permanent rule). A later metadata version may
+  add factories without changing DI semantics.
+- Metadata compiler is not yet invoked by any product build: the Dhole build system (M8) passes
+  -Adhole.application from dhole.toml [build] main. The repository's Gradle build does not wire
+  the processor into examples; tests run it in-process through javax.tools.
+- The processor is not declared as a Gradle incremental processor; index output is deterministic
+  and machine-independent, so incremental compilation can be added later (METADATA_COMPILER.md §35).
+- Not implemented in M4 (later milestones): route, validation, serialization, plugin and module
+  metadata; generic TypeRef (§14); metadata cache keys (§50); dhole metadata CLI (§58).
+- On this machine, VS Code Java/Gradle processes also wrote JVM heap dumps (*.hprof, now ignored)
+  into the repository root; they were left in place, not deleted.
 - No automatic code formatter is enforced; formatting relies on .editorconfig.
 - Local builds on low-memory machines may crash the Kotlin daemon while compiling build-logic;
   workaround: ./gradlew build -Dkotlin.compiler.execution.strategy=in-process
@@ -458,6 +523,7 @@ Resolved by owner decision (docs(architecture): defer startup failure integratio
 ad60595 docs(status): mark M1 complete locally   (local clean build + GitHub Actions "build" run 36237735431, success)
 7f19906 docs(status): mark M2 complete locally   (local clean build + GitHub Actions "build" run 36240156613, success)
 0f83bd4 docs(status): mark M3 complete locally   (local clean build + GitHub Actions "build" run 36241951070, success)
+6525560 test(compiler): verify generated metadata with the dependency container   (local clean build only; GitHub Actions not yet run)
 ```
 
 ---
@@ -481,15 +547,17 @@ git status
 ## Next Recommended Action
 
 ```text
-M4 — Metadata Compiler
+1. Push main and confirm the GitHub Actions "build" workflow passes on the M4 commits.
+2. M5 — HTTP + Routing (NOT STARTED). Start only on explicit request.
 ```
 
-Read before M4:
+Read before M5:
 
 ```text
-docs/METADATA_COMPILER.md
-docs/COMPONENT_MODEL.md (sections 49-50, 63-65)
-docs/IMPLEMENTATION_ROADMAP.md (section 8)
+docs/HTTP.md
+docs/ROUTING.md
+docs/REQUEST_LIFECYCLE.md
+docs/IMPLEMENTATION_ROADMAP.md (section 9)
 docs/DEVELOPMENT.md
 ```
 
