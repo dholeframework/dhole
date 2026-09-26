@@ -914,7 +914,16 @@ Descoberta e validação:
 
 - o índice contém todas as classes concretas (classes e records) do application root presentes na compilação, como providers conhecidos;
 - problemas de constructor são registados como dados, não como erros de build (DTOs e utilitários não são componentes);
-- a validação de graph em build-time requer roots estruturais (Controller, M5+) e bindings conhecidos em build-time; no M4 não existem, pelo que DHOLE-DI-001/002/003 são reportados pelo runtime DI com a localização registada no índice.
+- o M4 regista metadata estrutural dos tipos conhecidos elegíveis; um tipo indexado não é automaticamente um componente;
+- a validação do dependency graph em build-time torna-se aplicável quando existirem roots estruturais reais (Controller, M5+) e bindings conhecidos em build-time; não se fabricam roots para a antecipar;
+- o primeiro milestone que introduzir esses roots deve ligá-los ao validator/diagnostic path do metadata compiler (DHOLE-DI-001/002/003 como diagnostics de `javac`);
+- até lá, DHOLE-DI-001/002/003 são reportados pelo runtime DI com a localização registada no índice; esta não é a forma final.
+
+Integração no build do repositório (harness interno, não contrato do Dhole):
+
+- o source set `fixture` de `tools/dhole-compiler` é compilado pelo `JavaCompile` normal do Gradle com o jar do compiler no annotation processor path e `-Adhole.application=com.acme.fixture.App`;
+- o teste do módulo verifica o `components.idx` produzido por essa compilação;
+- o contrato do produto continua a ser `dhole build` / `dhole run` / `dhole dev` (M8), que passa a mesma opção ao `javac`.
 
 Runtime:
 
@@ -1110,6 +1119,15 @@ Isso ajuda:
 - IDE;
 - CI;
 - support.
+
+Prefixos reservados:
+
+```text
+DHOLE-META-*   metadata compiler / metadata format (ex.: DHOLE-META-001 application class inválida ou inexistente)
+DHOLE-DI-*     dependency injection (DHOLE-DI-001 missing, DHOLE-DI-002 ambiguous, DHOLE-DI-003 circular)
+```
+
+Novos códigos são adicionados apenas quando um diagnostic real os usa.
 
 ---
 
