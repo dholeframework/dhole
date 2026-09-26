@@ -80,6 +80,15 @@ final class ContainerBuilder {
         return new ComponentRegistry(registrations, bindings, components);
     }
 
+    /**
+     * Validates the registrations and starts a new container with its registered singletons.
+     *
+     * @throws DependencyException if the registrations are invalid or a singleton cannot be created
+     */
+    DependencyContainer build() {
+        return DependencyContainer.start(registry());
+    }
+
     private ContainerBuilder addBinding(Binding binding) {
         if (bindings.putIfAbsent(binding.type(), binding) != null) {
             throw new DependencyException("Binding Conflict\n\n" + DependencyMessages.name(binding.type())
